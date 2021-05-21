@@ -12,14 +12,14 @@ mod render_graph;
 mod truncated_torus;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
-pub enum FseGizmoSystem {
+pub enum TransformGizmoSystem {
     Place,
     Grab,
     Drag,
 }
 
-pub struct FseGizmoPlugin;
-impl Plugin for FseGizmoPlugin {
+pub struct TransformGizmoPlugin;
+impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(build_gizmo.system())
             .add_plugin(picking::GizmoPickingPlugin)
@@ -28,7 +28,7 @@ impl Plugin for FseGizmoPlugin {
                 CoreStage::PostUpdate,
                 grab_gizmo
                     .system()
-                    .label(FseGizmoSystem::Grab)
+                    .label(TransformGizmoSystem::Grab)
                     .after(PickingSystem::Focus)
                     .before(PickingSystem::Selection),
             )
@@ -36,8 +36,8 @@ impl Plugin for FseGizmoPlugin {
                 CoreStage::PostUpdate,
                 drag_gizmo
                     .system()
-                    .label(FseGizmoSystem::Drag)
-                    .after(FseGizmoSystem::Grab)
+                    .label(TransformGizmoSystem::Drag)
+                    .after(TransformGizmoSystem::Grab)
                     .before(FseNormalizeSystem::Normalize)
                     .before(TransformSystem::TransformPropagate),
             )
@@ -45,9 +45,9 @@ impl Plugin for FseGizmoPlugin {
                 CoreStage::PostUpdate,
                 place_gizmo
                     .system()
-                    .label(FseGizmoSystem::Place)
+                    .label(TransformGizmoSystem::Place)
                     .after(TransformSystem::TransformPropagate)
-                    .after(FseGizmoSystem::Drag),
+                    .after(TransformGizmoSystem::Drag),
             );
         {
             render_graph::add_gizmo_graph(app.world_mut());
@@ -56,22 +56,22 @@ impl Plugin for FseGizmoPlugin {
 }
 
 #[derive(Bundle)]
-pub struct FseGizmoBundle {
-    gizmo: FseGizmo,
+pub struct TransformGizmoBundle {
+    gizmo: TransformGizmo,
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visible,
     normalize: Normalize3d,
 }
-impl Default for FseGizmoBundle {
+impl Default for TransformGizmoBundle {
     fn default() -> Self {
-        FseGizmoBundle {
+        TransformGizmoBundle {
             transform: Transform::from_translation(Vec3::splat(f32::MIN)),
             visible: Visible {
                 is_visible: false,
                 is_transparent: false,
             },
-            gizmo: FseGizmo::default(),
+            gizmo: TransformGizmo::default(),
             global_transform: GlobalTransform::default(),
             normalize: Normalize3d,
         }
@@ -79,22 +79,22 @@ impl Default for FseGizmoBundle {
 }
 
 #[derive(Default, PartialEq)]
-pub struct FseGizmo {
-    current_interaction: Option<GizmoInteraction>,
+pub struct TransformGizmo {
+    current_interaction: Option<TransformGizmoInteraction>,
     drag_start: Option<Vec3>,
     initial_transform: Option<Transform>,
 }
 
-impl FseGizmo {
+impl TransformGizmo {
     /// Get the gizmo's drag direction.
-    pub fn current_interaction(&self) -> Option<GizmoInteraction> {
+    pub fn current_interaction(&self) -> Option<TransformGizmoInteraction> {
         self.current_interaction
     }
 }
 
 /// Marks the current active gizmo interaction
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum GizmoInteraction {
+pub enum TransformGizmoInteraction {
     TranslateAxis(Vec3),
     TranslateOrigin,
     RotateAxis(Vec3),
@@ -109,10 +109,10 @@ struct InitialTransform {
 #[allow(clippy::type_complexity)]
 fn drag_gizmo(
     pick_cam: Query<&PickingCamera>,
-    mut gizmo_query: Query<(&mut FseGizmo, &GlobalTransform)>,
+    mut gizmo_query: Query<(&mut TransformGizmo, &GlobalTransform)>,
     mut transform_queries: QuerySet<(
         Query<(&Selection, &mut Transform, &InitialTransform)>,
-        Query<&mut Transform, With<FseGizmo>>,
+        Query<&mut Transform, With<TransformGizmo>>,
     )>,
 ) {
     // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
@@ -149,7 +149,7 @@ fn drag_gizmo(
             }
         };
         match interaction {
-            GizmoInteraction::TranslateAxis(axis) => {
+            TransformGizmoInteraction::TranslateAxis(axis) => {
                 let cursor_plane_intersection = if let Some(intersection) = picking_camera
                     .intersect_primitive(Primitive3d::Plane {
                         normal: picking_ray.direction(),
@@ -193,8 +193,8 @@ fn drag_gizmo(
                     }
                 });
             }
-            GizmoInteraction::TranslateOrigin => (),
-            GizmoInteraction::RotateAxis(axis) => {
+            TransformGizmoInteraction::TranslateOrigin => (),
+            TransformGizmoInteraction::RotateAxis(axis) => {
                 let rotation_plane = Primitive3d::Plane {
                     normal: axis.normalize(),
                     point: gizmo_origin,
@@ -229,7 +229,7 @@ fn drag_gizmo(
                         }
                     });
             }
-            GizmoInteraction::ScaleAxis(_) => (),
+            TransformGizmoInteraction::ScaleAxis(_) => (),
         }
     }
 }
@@ -239,9 +239,9 @@ fn drag_gizmo(
 fn grab_gizmo(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    mut gizmo_query: Query<(&Children, &mut FseGizmo)>,
+    mut gizmo_query: Query<(&Children, &mut TransformGizmo)>,
     gizmo_raycast_source: Query<&picking::GizmoPickSource>,
-    hover_query: Query<&GizmoInteraction>,
+    hover_query: Query<&TransformGizmoInteraction>,
     selected_items_query: Query<(&Selection, &Transform, Entity)>,
     initial_transform_query: Query<Entity, With<InitialTransform>>,
 ) {
@@ -276,7 +276,7 @@ fn grab_gizmo(
                     }
                 }
             } else {
-                *gizmo = FseGizmo::default();
+                *gizmo = TransformGizmo::default();
                 for entity in initial_transform_query.iter() {
                     commands.entity(entity).remove::<InitialTransform>();
                 }
@@ -284,8 +284,8 @@ fn grab_gizmo(
         }
     } else if mouse_button_input.just_released(MouseButton::Left) {
         for (_children, mut gizmo) in gizmo_query.iter_mut() {
-            if *gizmo != FseGizmo::default() {
-                *gizmo = FseGizmo::default();
+            if *gizmo != TransformGizmo::default() {
+                *gizmo = TransformGizmo::default();
                 info!("Gizmo handle released");
             }
         }
@@ -296,7 +296,7 @@ fn grab_gizmo(
 #[allow(clippy::type_complexity)]
 fn place_gizmo(
     selection_query: Query<(&Selection, &GlobalTransform)>,
-    mut gizmo_query: Query<(&mut Transform, &mut Visible), With<FseGizmo>>,
+    mut gizmo_query: Query<(&mut Transform, &mut Visible), With<TransformGizmo>>,
 ) {
     // Maximum xyz position of all selected entities
     let position = selection_query
@@ -383,7 +383,7 @@ fn build_gizmo(
     });
     // Build the gizmo using the variables above.
     commands
-        .spawn_bundle(FseGizmoBundle::default())
+        .spawn_bundle(TransformGizmoBundle::default())
         .with_children(|parent| {
             // Translation Axes
             parent
@@ -435,7 +435,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::TranslateAxis(Vec3::X))
+                .insert(TransformGizmoInteraction::TranslateAxis(Vec3::X))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
             parent
@@ -446,7 +446,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::TranslateAxis(Vec3::Y))
+                .insert(TransformGizmoInteraction::TranslateAxis(Vec3::Y))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
             parent
@@ -460,7 +460,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::TranslateAxis(Vec3::Z))
+                .insert(TransformGizmoInteraction::TranslateAxis(Vec3::Z))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
 
@@ -472,7 +472,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::TranslateOrigin)
+                .insert(TransformGizmoInteraction::TranslateOrigin)
                 .insert(GizmoPass)
                 .remove::<MainPass>();
 
@@ -523,7 +523,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::RotateAxis(Vec3::X))
+                .insert(TransformGizmoInteraction::RotateAxis(Vec3::X))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
             parent
@@ -538,7 +538,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::RotateAxis(Vec3::Y))
+                .insert(TransformGizmoInteraction::RotateAxis(Vec3::Y))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
             parent
@@ -553,7 +553,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::RotateAxis(Vec3::Z))
+                .insert(TransformGizmoInteraction::RotateAxis(Vec3::Z))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
 
@@ -566,7 +566,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::ScaleAxis(Vec3::X))
+                .insert(TransformGizmoInteraction::ScaleAxis(Vec3::X))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
             parent
@@ -577,7 +577,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::ScaleAxis(Vec3::Y))
+                .insert(TransformGizmoInteraction::ScaleAxis(Vec3::Y))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
             parent
@@ -588,7 +588,7 @@ fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(GizmoInteraction::ScaleAxis(Vec3::Z))
+                .insert(TransformGizmoInteraction::ScaleAxis(Vec3::Z))
                 .insert(GizmoPass)
                 .remove::<MainPass>();
         })

@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::TransformGizmo;
+
 pub type GizmoPickSource = bevy_mod_raycast::RayCastSource<GizmoRaycastSet>;
 pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 
@@ -58,8 +60,18 @@ fn update_gizmo_raycast_with_cursor(
 fn disable_mesh_picking_during_gizmo_hover(
     mut picking_state: ResMut<bevy_mod_picking::PickingPluginState>,
     query: Query<&bevy_mod_raycast::RayCastSource<GizmoRaycastSet>>,
+    gizmo_query: Query<&TransformGizmo>,
 ) {
-    for source in query.iter() {
-        picking_state.enabled = source.intersect_top().is_none()
-    }
+    let not_hovering_gizmo = if let Some(source) = query.iter().last() {
+        source.intersect_top().is_none()
+    } else {
+        true
+    };
+    let gizmo_inactive = if let Some(gizmo) = gizmo_query.iter().last() {
+        gizmo.current_interaction().is_none()
+    } else {
+        return;
+    };
+    // Set the picking state based on current user interaction state
+    picking_state.enabled = gizmo_inactive && not_hovering_gizmo;
 }
