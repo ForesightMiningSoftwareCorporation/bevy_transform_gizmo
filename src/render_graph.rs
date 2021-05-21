@@ -39,7 +39,7 @@ pub fn add_gizmo_graph(world: &mut World) {
             }),
             stencil_ops: None,
         }),
-        sample_count: msaa.samples.clone(),
+        sample_count: msaa.samples,
     });
     gizmo_pass_node.add_camera(base::camera::CAMERA_3D);
 
