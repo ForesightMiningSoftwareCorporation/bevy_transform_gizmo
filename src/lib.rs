@@ -348,17 +348,17 @@ fn build_gizmo(
     // Define gizmo materials
     let gizmo_material_x = materials.add(StandardMaterial {
         unlit: true,
-        base_color: Color::rgb(1.0, 0.2, 0.2),
+        base_color: Color::rgb(1.0, 0.4, 0.4),
         ..Default::default()
     });
     let gizmo_material_y = materials.add(StandardMaterial {
         unlit: true,
-        base_color: Color::rgb(0.2, 1.0, 0.2),
+        base_color: Color::rgb(0.4, 1.0, 0.4),
         ..Default::default()
     });
     let gizmo_material_z = materials.add(StandardMaterial {
         unlit: true,
-        base_color: Color::rgb(0.2, 0.2, 1.0),
+        base_color: Color::rgb(0.4, 0.5, 1.0),
         ..Default::default()
     });
     let gizmo_material_x_selectable = materials.add(StandardMaterial {
