@@ -2,6 +2,10 @@ use bevy::prelude::*;
 
 fn main() {
     App::build()
+        .insert_resource(WindowDescriptor {
+            vsync: false, // Disabled for this demo to remove vsync as a source of input latency
+            ..Default::default()
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(bevy_mod_picking::DefaultPickingPlugins)
         .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
@@ -40,7 +44,7 @@ fn setup(
     // camera
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
         .insert_bundle(bevy_mod_picking::PickingCameraBundle::default())
