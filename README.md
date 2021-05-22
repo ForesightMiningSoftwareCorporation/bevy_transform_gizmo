@@ -14,7 +14,7 @@ cargo run --example minimal
 
 # Features
 
-* Prebuilt transforma gizmo appears when you select a designated mesh
+* Prebuilt transform gizmo appears when you select a designated mesh
 * Translation handles
 * Rotation handles
 * Gizmo always renders on top of the main render pass
