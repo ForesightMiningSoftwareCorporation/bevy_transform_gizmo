@@ -26,7 +26,8 @@ fn setup(
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..Default::default()
         })
-        .insert_bundle(bevy_mod_picking::PickableBundle::default());
+        .insert_bundle(bevy_mod_picking::PickableBundle::default())
+        .insert(bevy_transform_gizmo::GizmoTransformable);
     // cube
     commands
         .spawn_bundle(PbrBundle {
@@ -35,7 +36,8 @@ fn setup(
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
             ..Default::default()
         })
-        .insert_bundle(bevy_mod_picking::PickableBundle::default());
+        .insert_bundle(bevy_mod_picking::PickableBundle::default())
+        .insert(bevy_transform_gizmo::GizmoTransformable);
     // light
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),

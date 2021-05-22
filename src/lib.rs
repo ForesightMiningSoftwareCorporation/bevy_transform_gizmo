@@ -18,6 +18,8 @@ pub enum TransformGizmoSystem {
     Drag,
 }
 
+pub struct GizmoTransformable;
+
 pub struct TransformGizmoPlugin;
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut AppBuilder) {
@@ -295,7 +297,7 @@ fn grab_gizmo(
 /// Places the gizmo in space relative to the selected entity(s).
 #[allow(clippy::type_complexity)]
 fn place_gizmo(
-    selection_query: Query<(&Selection, &GlobalTransform)>,
+    selection_query: Query<(&Selection, &GlobalTransform), With<GizmoTransformable>>,
     mut gizmo_query: Query<(&mut Transform, &mut Visible), With<TransformGizmo>>,
 ) {
     // Maximum xyz position of all selected entities
