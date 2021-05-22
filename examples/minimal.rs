@@ -6,6 +6,7 @@ fn main() {
             vsync: false, // Disabled for this demo to remove vsync as a source of input latency
             ..Default::default()
         })
+        .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugin(bevy_mod_picking::DefaultPickingPlugins)
         .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
