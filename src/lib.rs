@@ -326,7 +326,7 @@ fn build_gizmo(
     let arc_radius = 1.1;
     // Define gizmo meshes
     let arrow_tail_mesh = meshes.add(Mesh::from(shape::Capsule {
-        radius: 0.02,
+        radius: 0.015,
         depth: axis_length,
         ..Default::default()
     }));
@@ -341,7 +341,7 @@ fn build_gizmo(
     }));
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
-        ring_radius: 0.02,
+        ring_radius: 0.015,
         ..Default::default()
     }));
     let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
