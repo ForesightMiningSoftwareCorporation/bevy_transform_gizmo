@@ -41,6 +41,6 @@ pub fn normalize(
             .transform_point3(transform.translation)
             .z;
 
-        transform.scale = Vec3::splat(distance / 10.0);
+        transform.scale = Vec3::splat(distance / 12.0);
     }
 }
