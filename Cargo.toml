@@ -19,4 +19,5 @@ bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", version = 
     "bevy_winit",
     "bevy_gltf",
     "x11",
+    "jpeg",
 ] }
