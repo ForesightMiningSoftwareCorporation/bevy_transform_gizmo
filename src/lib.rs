@@ -39,7 +39,7 @@ impl Plugin for TransformGizmoPlugin {
                 drag_gizmo
                     .system()
                     .label(TransformGizmoSystem::Drag)
-                    .after(TransformGizmoSystem::Grab)
+                    //.after(TransformGizmoSystem::Grab)
                     .before(FseNormalizeSystem::Normalize)
                     .before(TransformSystem::TransformPropagate),
             )
