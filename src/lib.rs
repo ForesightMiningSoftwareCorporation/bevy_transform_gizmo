@@ -27,7 +27,7 @@ impl Plugin for TransformGizmoPlugin {
             .add_plugin(picking::GizmoPickingPlugin)
             .add_plugin(normalization::Ui3dNormalization)
             .add_system_to_stage(
-                CoreStage::PostUpdate,
+                CoreStage::PreUpdate,
                 grab_gizmo
                     .system()
                     .label(TransformGizmoSystem::Grab)

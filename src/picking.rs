@@ -12,26 +12,26 @@ impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<bevy_mod_raycast::PluginState<GizmoRaycastSet>>()
             .add_system_to_stage(
-                CoreStage::PostUpdate,
+                CoreStage::PreUpdate,
                 bevy_mod_raycast::build_rays::<GizmoRaycastSet>
                     .system()
                     .label(bevy_mod_raycast::RaycastSystem::BuildRays),
             )
             .add_system_to_stage(
-                CoreStage::PostUpdate,
+                CoreStage::PreUpdate,
                 bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
                     .system()
                     .label(bevy_mod_raycast::RaycastSystem::UpdateRaycast)
                     .after(bevy_mod_raycast::RaycastSystem::BuildRays),
             )
             .add_system_to_stage(
-                CoreStage::PostUpdate,
+                CoreStage::PreUpdate,
                 update_gizmo_raycast_with_cursor
                     .system()
                     .before(bevy_mod_raycast::RaycastSystem::BuildRays),
             )
             .add_system_to_stage(
-                CoreStage::PostUpdate,
+                CoreStage::PreUpdate,
                 disable_mesh_picking_during_gizmo_hover
                     .system()
                     .before(bevy_mod_picking::PickingSystem::Focus)
