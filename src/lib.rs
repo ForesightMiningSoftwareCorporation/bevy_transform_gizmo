@@ -346,7 +346,7 @@ fn build_gizmo(
         ring_radius: 0.015,
         ..Default::default()
     }));
-    let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
+    //let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
     // Define gizmo materials
     let gizmo_material_x = materials.add(StandardMaterial {
         unlit: true,
@@ -378,11 +378,11 @@ fn build_gizmo(
         base_color: Color::rgb(0.7, 0.7, 1.0),
         ..Default::default()
     });
-    let gizmo_material_origin = materials.add(StandardMaterial {
+    /*let gizmo_material_origin = materials.add(StandardMaterial {
         unlit: true,
         base_color: Color::rgb(0.7, 0.7, 0.7),
         ..Default::default()
-    });
+    });*/
     // Build the gizmo using the variables above.
     commands
         .spawn_bundle(TransformGizmoBundle::default())
