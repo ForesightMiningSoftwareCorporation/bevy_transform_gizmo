@@ -18,12 +18,20 @@ pub enum TransformGizmoSystem {
     Drag,
 }
 
+#[derive(Debug)]
+pub struct TransformGizmoEvent {
+    pub from: Transform,
+    pub to: Transform,
+    pub interaction: TransformGizmoInteraction,
+}
+
 pub struct GizmoTransformable;
 
 pub struct TransformGizmoPlugin;
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(build_gizmo.system())
+        app.add_event::<TransformGizmoEvent>()
+            .add_startup_system(build_gizmo.system())
             .add_plugin(picking::GizmoPickingPlugin)
             .add_plugin(normalization::Ui3dNormalization)
             .add_system_to_stage(
@@ -83,7 +91,10 @@ impl Default for TransformGizmoBundle {
 #[derive(Default, PartialEq)]
 pub struct TransformGizmo {
     current_interaction: Option<TransformGizmoInteraction>,
+    // Point in space where mouse-gizmo interaction started (on mouse down), used to compare how
+    // much total dragging has occurred without accumulating error across frames.
     drag_start: Option<Vec3>,
+    // Initial transform of the gizmo
     initial_transform: Option<Transform>,
 }
 
@@ -237,18 +248,19 @@ fn drag_gizmo(
 }
 
 /// Tracks when one of the gizmo handles has been clicked on.
-#[allow(clippy::type_complexity)]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn grab_gizmo(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    mut gizmo_query: Query<(&Children, &mut TransformGizmo)>,
+    mut gizmo_events: EventWriter<TransformGizmoEvent>,
+    mut gizmo_query: Query<(&Children, &mut TransformGizmo, &Transform)>,
     gizmo_raycast_source: Query<&picking::GizmoPickSource>,
     hover_query: Query<&TransformGizmoInteraction>,
     selected_items_query: Query<(&Selection, &Transform, Entity)>,
     initial_transform_query: Query<Entity, With<InitialTransform>>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        for (children, mut gizmo) in gizmo_query.iter_mut() {
+        for (children, mut gizmo, _transform) in gizmo_query.iter_mut() {
             let mut gizmo_clicked = false;
             // First check if the gizmo is even being hovered over
             if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
@@ -264,7 +276,7 @@ fn grab_gizmo(
                     if let Ok(gizmo_interaction) = hover_query.get(*child) {
                         gizmo.current_interaction = Some(*gizmo_interaction);
                         gizmo_clicked = true;
-                        info!("Gizmo handle {:?} selected", gizmo_interaction);
+                        //info!("Gizmo handle {:?} selected", gizmo_interaction);
                     }
                 }
             }
@@ -285,10 +297,18 @@ fn grab_gizmo(
             }
         }
     } else if mouse_button_input.just_released(MouseButton::Left) {
-        for (_children, mut gizmo) in gizmo_query.iter_mut() {
-            if *gizmo != TransformGizmo::default() {
+        for (_children, mut gizmo, transform) in gizmo_query.iter_mut() {
+            if let (Some(from), Some(interaction)) =
+                (gizmo.initial_transform, gizmo.current_interaction())
+            {
+                let event = TransformGizmoEvent {
+                    from,
+                    to: *transform,
+                    interaction,
+                };
+                info!("{:?}", event);
+                gizmo_events.send(event);
                 *gizmo = TransformGizmo::default();
-                info!("Gizmo handle released");
             }
         }
     }
