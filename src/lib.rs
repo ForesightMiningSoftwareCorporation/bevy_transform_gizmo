@@ -306,7 +306,7 @@ fn grab_gizmo(
                     to: *transform,
                     interaction,
                 };
-                info!("{:?}", event);
+                //info!("{:?}", event);
                 gizmo_events.send(event);
                 *gizmo = TransformGizmo::default();
             }
