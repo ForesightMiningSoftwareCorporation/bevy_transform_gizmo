@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(WindowDescriptor {
             vsync: false, // Disabled for this demo to remove vsync as a source of input latency
             ..Default::default()

@@ -9,7 +9,7 @@ pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 /// the `bevy_mod_picking` plugin.
 pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.init_resource::<bevy_mod_raycast::PluginState<GizmoRaycastSet>>()
             .add_system_to_stage(
                 CoreStage::PreUpdate,

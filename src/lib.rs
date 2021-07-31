@@ -29,7 +29,7 @@ pub struct GizmoTransformable;
 
 pub struct TransformGizmoPlugin;
 impl Plugin for TransformGizmoPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_event::<TransformGizmoEvent>()
             .add_startup_system(build_gizmo.system())
             .add_plugin(picking::GizmoPickingPlugin)
@@ -60,7 +60,7 @@ impl Plugin for TransformGizmoPlugin {
                     .after(TransformGizmoSystem::Drag),
             );
         {
-            render_graph::add_gizmo_graph(app.world_mut());
+            render_graph::add_gizmo_graph(&mut app.world);
         }
     }
 }
