@@ -1,3 +1,4 @@
+use crate::TransformGizmoPluginConfig;
 use bevy::{prelude::*, render::camera::Camera, transform::TransformSystem};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
@@ -8,13 +9,17 @@ pub enum FseNormalizeSystem {
 pub struct Ui3dNormalization;
 impl Plugin for Ui3dNormalization {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            normalize
-                .system()
-                .label(FseNormalizeSystem::Normalize)
-                .before(TransformSystem::TransformPropagate),
-        );
+        let mut system = normalize
+            .system()
+            .label(FseNormalizeSystem::Normalize)
+            .before(TransformSystem::TransformPropagate);
+        if let Some(TransformGizmoPluginConfig {
+            run_criteria_producer,
+        }) = app.world.get_resource()
+        {
+            system = system.with_run_criteria(run_criteria_producer());
+        }
+        app.add_system_to_stage(CoreStage::PostUpdate, system);
     }
 }
 

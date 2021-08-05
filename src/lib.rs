@@ -1,4 +1,7 @@
-use bevy::{prelude::*, render::render_graph::base::MainPass, transform::TransformSystem};
+use bevy::{
+    ecs::schedule::RunCriteriaDescriptorOrLabel, prelude::*, render::render_graph::base::MainPass,
+    transform::TransformSystem,
+};
 use bevy_mod_picking::{self, PickingCamera, PickingSystem, Primitive3d, Selection};
 use normalization::*;
 use render_graph::GizmoPass;
@@ -27,38 +30,54 @@ pub struct TransformGizmoEvent {
 
 pub struct GizmoTransformable;
 
+pub struct TransformGizmoPluginConfig {
+    run_criteria_producer: Box<dyn Fn() -> RunCriteriaDescriptorOrLabel + Send + Sync + 'static>,
+}
+
+impl TransformGizmoPluginConfig {
+    pub fn with_run_criteria_producer(
+        run_criteria_producer: impl Fn() -> RunCriteriaDescriptorOrLabel + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            run_criteria_producer: Box::new(run_criteria_producer),
+        }
+    }
+}
+
 pub struct TransformGizmoPlugin;
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
+        let mut grab_gizmo = grab_gizmo
+            .system()
+            .label(TransformGizmoSystem::Grab)
+            .after(PickingSystem::Focus)
+            .before(PickingSystem::Selection);
+        let mut drag_gizmo = drag_gizmo
+            .system()
+            .label(TransformGizmoSystem::Drag)
+            //.after(TransformGizmoSystem::Grab)
+            .before(FseNormalizeSystem::Normalize)
+            .before(TransformSystem::TransformPropagate);
+        let mut place_gizmo = place_gizmo
+            .system()
+            .label(TransformGizmoSystem::Place)
+            .after(TransformSystem::TransformPropagate)
+            .after(TransformGizmoSystem::Drag);
+        if let Some(TransformGizmoPluginConfig {
+            run_criteria_producer,
+        }) = app.world.get_resource()
+        {
+            grab_gizmo = grab_gizmo.with_run_criteria(run_criteria_producer());
+            drag_gizmo = drag_gizmo.with_run_criteria(run_criteria_producer());
+            place_gizmo = place_gizmo.with_run_criteria(run_criteria_producer());
+        }
         app.add_event::<TransformGizmoEvent>()
             .add_startup_system(build_gizmo.system())
             .add_plugin(picking::GizmoPickingPlugin)
             .add_plugin(normalization::Ui3dNormalization)
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                grab_gizmo
-                    .system()
-                    .label(TransformGizmoSystem::Grab)
-                    .after(PickingSystem::Focus)
-                    .before(PickingSystem::Selection),
-            )
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                drag_gizmo
-                    .system()
-                    .label(TransformGizmoSystem::Drag)
-                    //.after(TransformGizmoSystem::Grab)
-                    .before(FseNormalizeSystem::Normalize)
-                    .before(TransformSystem::TransformPropagate),
-            )
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                place_gizmo
-                    .system()
-                    .label(TransformGizmoSystem::Place)
-                    .after(TransformSystem::TransformPropagate)
-                    .after(TransformGizmoSystem::Drag),
-            );
+            .add_system_to_stage(CoreStage::PreUpdate, grab_gizmo)
+            .add_system_to_stage(CoreStage::PostUpdate, drag_gizmo)
+            .add_system_to_stage(CoreStage::PostUpdate, place_gizmo);
         {
             render_graph::add_gizmo_graph(&mut app.world);
         }
