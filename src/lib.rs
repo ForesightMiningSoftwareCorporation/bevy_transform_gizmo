@@ -1,5 +1,7 @@
 use bevy::{
-    ecs::schedule::RunCriteriaDescriptorOrLabel, prelude::*, render::render_graph::base::MainPass,
+    ecs::schedule::{IntoRunCriteria, RunCriteriaDescriptorOrLabel},
+    prelude::*,
+    render::render_graph::base::MainPass,
     transform::TransformSystem,
 };
 use bevy_mod_picking::{self, PickingCamera, PickingSystem, Primitive3d, Selection};
@@ -35,11 +37,13 @@ pub struct TransformGizmoPluginConfig {
 }
 
 impl TransformGizmoPluginConfig {
-    pub fn with_run_criteria_producer(
-        run_criteria_producer: impl Fn() -> RunCriteriaDescriptorOrLabel + Send + Sync + 'static,
-    ) -> Self {
+    pub fn with_run_criteria_producer<F, C, M>(run_criteria_producer: F) -> Self
+    where
+        F: Fn() -> C + Send + Sync + 'static,
+        C: IntoRunCriteria<M>,
+    {
         Self {
-            run_criteria_producer: Box::new(run_criteria_producer),
+            run_criteria_producer: Box::new(move || run_criteria_producer().into()),
         }
     }
 }

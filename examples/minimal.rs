@@ -9,6 +9,11 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugin(bevy_mod_picking::DefaultPickingPlugins)
+        .insert_resource(
+            bevy_transform_gizmo::TransformGizmoPluginConfig::with_run_criteria_producer(|| {
+                || bevy::ecs::schedule::ShouldRun::Yes
+            }),
+        )
         .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
         .add_startup_system(setup.system())
         .run();
