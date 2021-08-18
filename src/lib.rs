@@ -159,8 +159,8 @@ fn drag_gizmo(
         let gizmo_initial = match &gizmo.initial_transform {
             Some(transform) => *transform,
             None => {
-                gizmo.initial_transform = Some(*gizmo_transform);
-                *gizmo_transform
+                gizmo.initial_transform = Some(gizmo_transform);
+                gizmo_transform
             }
         };
         match interaction {
