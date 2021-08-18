@@ -124,8 +124,8 @@ fn drag_gizmo(
     pick_cam: Query<&PickingCamera>,
     mut gizmo_query: Query<(&mut TransformGizmo, &GlobalTransform)>,
     mut transform_queries: QuerySet<(
-        Query<(&Selection, &mut Transform, &InitialTransform)>,
-        Query<&mut Transform, With<TransformGizmo>>,
+        QueryState<(&Selection, &mut Transform, &InitialTransform)>,
+        QueryState<&mut Transform, With<TransformGizmo>>,
     )>,
 ) {
     // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
@@ -150,15 +150,15 @@ fn drag_gizmo(
     };
     if let Some(interaction) = gizmo.current_interaction {
         let gizmo_transform = transform_queries
-            .q1_mut()
+            .q1()
             .iter_mut()
             .last()
-            .expect("Gizmo missing a `Transform` when there is some gizmo interaction.");
+            .expect("Gizmo missing a `Transform` when there is some gizmo interaction.").clone();
         let gizmo_initial = match &gizmo.initial_transform {
             Some(transform) => *transform,
             None => {
-                gizmo.initial_transform = Some(*gizmo_transform);
-                *gizmo_transform
+                gizmo.initial_transform = Some(gizmo_transform);
+                gizmo_transform
             }
         };
         match interaction {
@@ -189,7 +189,7 @@ fn drag_gizmo(
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
                 transform_queries
-                    .q0_mut()
+                    .q0()
                     .iter_mut()
                     .filter(|(s, _t, _i)| s.selected())
                     .for_each(|(_s, mut t, i)| {
@@ -199,7 +199,7 @@ fn drag_gizmo(
                         }
                     });
 
-                transform_queries.q1_mut().iter_mut().for_each(|mut t| {
+                transform_queries.q1().iter_mut().for_each(|mut t| {
                     *t = Transform {
                         translation: gizmo_initial.translation + translation,
                         ..gizmo_initial
@@ -232,7 +232,7 @@ fn drag_gizmo(
                 let angle = det.atan2(dot);
                 let rotation = Quat::from_axis_angle(axis, angle);
                 transform_queries
-                    .q0_mut()
+                    .q0()
                     .iter_mut()
                     .filter(|(s, _t, _i)| s.selected())
                     .for_each(|(_s, mut t, i)| {
