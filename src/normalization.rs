@@ -11,7 +11,6 @@ impl Plugin for Ui3dNormalization {
         app.add_system_to_stage(
             CoreStage::PostUpdate,
             normalize
-                .system()
                 .label(FseNormalizeSystem::Normalize)
                 .before(TransformSystem::TransformPropagate),
         );
@@ -19,6 +18,7 @@ impl Plugin for Ui3dNormalization {
 }
 
 /// Marker struct that marks entities with meshes that should be scaled relative to the camera.
+#[derive(Component)]
 pub struct Normalize3d;
 
 #[allow(clippy::type_complexity)]

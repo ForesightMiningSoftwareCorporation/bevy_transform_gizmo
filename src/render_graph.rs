@@ -8,7 +8,7 @@ use bevy::{
         render_graph::base,
     },
 };
-#[derive(Default)]
+#[derive(Component, Default)]
 pub struct GizmoPass;
 
 pub mod node {

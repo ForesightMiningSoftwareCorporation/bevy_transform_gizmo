@@ -9,11 +9,11 @@ publish = false
 
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false }
-bevy_mod_picking = { git = "https://github.com/JulianRuiseco/bevy_mod_picking", rev = "d0e9baf67b316d3b0c38870f95ef0c4c173db1c9" }
-bevy_mod_raycast = { git = "https://github.com/JulianRuiseco/bevy_mod_raycast", rev="ab786bcd3ad4117d3b13ef7f2379c020611014ac" }
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" }
+bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }
 
 [dev-dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", version = "0.5", default-features = false, features = [
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
     "render",
     "bevy_wgpu",
     "bevy_winit",

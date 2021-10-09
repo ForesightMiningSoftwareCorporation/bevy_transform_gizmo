@@ -25,19 +25,19 @@ pub struct TransformGizmoEvent {
     pub interaction: TransformGizmoInteraction,
 }
 
+#[derive(Component)]
 pub struct GizmoTransformable;
 
 pub struct TransformGizmoPlugin;
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TransformGizmoEvent>()
-            .add_startup_system(build_gizmo.system())
+            .add_startup_system(build_gizmo)
             .add_plugin(picking::GizmoPickingPlugin)
             .add_plugin(normalization::Ui3dNormalization)
             .add_system_to_stage(
                 CoreStage::PreUpdate,
                 grab_gizmo
-                    .system()
                     .label(TransformGizmoSystem::Grab)
                     .after(PickingSystem::Focus)
                     .before(PickingSystem::Selection),
@@ -45,7 +45,6 @@ impl Plugin for TransformGizmoPlugin {
             .add_system_to_stage(
                 CoreStage::PostUpdate,
                 drag_gizmo
-                    .system()
                     .label(TransformGizmoSystem::Drag)
                     //.after(TransformGizmoSystem::Grab)
                     .before(FseNormalizeSystem::Normalize)
@@ -54,7 +53,6 @@ impl Plugin for TransformGizmoPlugin {
             .add_system_to_stage(
                 CoreStage::PostUpdate,
                 place_gizmo
-                    .system()
                     .label(TransformGizmoSystem::Place)
                     .after(TransformSystem::TransformPropagate)
                     .after(TransformGizmoSystem::Drag),
@@ -88,7 +86,7 @@ impl Default for TransformGizmoBundle {
     }
 }
 
-#[derive(Default, PartialEq)]
+#[derive(Component, Default, PartialEq)]
 pub struct TransformGizmo {
     current_interaction: Option<TransformGizmoInteraction>,
     // Point in space where mouse-gizmo interaction started (on mouse down), used to compare how
@@ -106,7 +104,7 @@ impl TransformGizmo {
 }
 
 /// Marks the current active gizmo interaction
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub enum TransformGizmoInteraction {
     TranslateAxis(Vec3),
     TranslateOrigin,
@@ -114,6 +112,7 @@ pub enum TransformGizmoInteraction {
     ScaleAxis(Vec3),
 }
 
+#[derive(Component)]
 struct InitialTransform {
     transform: Transform,
 }
@@ -153,7 +152,8 @@ fn drag_gizmo(
             .q1()
             .iter_mut()
             .last()
-            .expect("Gizmo missing a `Transform` when there is some gizmo interaction.").clone();
+            .expect("Gizmo missing a `Transform` when there is some gizmo interaction.")
+            .clone();
         let gizmo_initial = match &gizmo.initial_transform {
             Some(transform) => *transform,
             None => {
