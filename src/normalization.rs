@@ -11,7 +11,6 @@ impl Plugin for Ui3dNormalization {
         app.add_system_to_stage(
             CoreStage::PostUpdate,
             normalize
-                .system()
                 .label(FseNormalizeSystem::Normalize)
                 .before(TransformSystem::TransformPropagate),
         );
