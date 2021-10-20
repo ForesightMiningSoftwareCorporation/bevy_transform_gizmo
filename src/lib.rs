@@ -1,5 +1,8 @@
 use bevy::{prelude::*, render::render_graph::base::MainPass, transform::TransformSystem};
-use bevy_mod_picking::{self, PickingCamera, PickingSystem, Primitive3d, Selection};
+use bevy_mod_picking::{
+    self, PickingBlocker, PickingCamera, PickingSystem, Primitive3d, Selection,
+};
+use bevy_mod_raycast::RaycastSystem;
 use normalization::*;
 use render_graph::GizmoPass;
 
@@ -14,6 +17,7 @@ mod truncated_torus;
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum TransformGizmoSystem {
     Place,
+    Hover,
     Grab,
     Drag,
 }
@@ -37,10 +41,16 @@ impl Plugin for TransformGizmoPlugin {
             .add_plugin(normalization::Ui3dNormalization)
             .add_system_to_stage(
                 CoreStage::PreUpdate,
+                hover_gizmo
+                    .label(TransformGizmoSystem::Hover)
+                    .after(RaycastSystem::UpdateRaycast),
+            )
+            .add_system_to_stage(
+                CoreStage::PreUpdate,
                 grab_gizmo
                     .label(TransformGizmoSystem::Grab)
-                    .after(PickingSystem::Focus)
-                    .before(PickingSystem::Selection),
+                    .after(TransformGizmoSystem::Hover)
+                    .before(PickingSystem::PauseForBlockers),
             )
             .add_system_to_stage(
                 CoreStage::PostUpdate,
@@ -66,15 +76,20 @@ impl Plugin for TransformGizmoPlugin {
 #[derive(Bundle)]
 pub struct TransformGizmoBundle {
     gizmo: TransformGizmo,
+    interaction: Interaction,
+    picking_blocker: PickingBlocker,
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visible,
     normalize: Normalize3d,
 }
+
 impl Default for TransformGizmoBundle {
     fn default() -> Self {
         TransformGizmoBundle {
             transform: Transform::from_translation(Vec3::splat(f32::MIN)),
+            interaction: Interaction::None,
+            picking_blocker: PickingBlocker,
             visible: Visible {
                 is_visible: false,
                 is_transparent: false,
@@ -121,7 +136,7 @@ struct InitialTransform {
 #[allow(clippy::type_complexity)]
 fn drag_gizmo(
     pick_cam: Query<&PickingCamera>,
-    mut gizmo_query: Query<(&mut TransformGizmo, &GlobalTransform)>,
+    mut gizmo_query: Query<(&mut TransformGizmo, &GlobalTransform, &Interaction)>,
     mut transform_queries: QuerySet<(
         QueryState<(&Selection, &mut Transform, &InitialTransform)>,
         QueryState<&mut Transform, With<TransformGizmo>>,
@@ -131,8 +146,10 @@ fn drag_gizmo(
     // should have no effect on the handle. We can do this by projecting the vector from the handle
     // click point to mouse's current position, onto the axis of the direction we are dragging. See
     // the wiki article for details: https://en.wikipedia.org/wiki/Vector_projection
-    let (mut gizmo, gizmo_global) = if let Some(gizmo_result) = gizmo_query.iter_mut().last() {
-        gizmo_result
+    let (mut gizmo, gizmo_global) = if let Some((gizmo, global_transform, &Interaction::Clicked)) =
+        gizmo_query.iter_mut().last()
+    {
+        (gizmo, global_transform)
     } else {
         return;
     };
@@ -247,40 +264,49 @@ fn drag_gizmo(
     }
 }
 
+fn hover_gizmo(
+    gizmo_raycast_source: Query<&picking::GizmoPickSource>,
+    mut gizmo_query: Query<(&Children, &mut TransformGizmo, &mut Interaction, &Transform)>,
+    hover_query: Query<&TransformGizmoInteraction>,
+) {
+    for (children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
+        if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
+            .iter()
+            .last()
+            .expect("Missing gizmo raycast source")
+            .intersect_top()
+        {
+            if *interaction == Interaction::None {
+                for child in children
+                    .iter()
+                    .filter(|entity| **entity == topmost_gizmo_entity)
+                {
+                    *interaction = Interaction::Hovered;
+                    if let Ok(gizmo_interaction) = hover_query.get(*child) {
+                        gizmo.current_interaction = Some(*gizmo_interaction);
+                    }
+                }
+            }
+        } else if *interaction == Interaction::Hovered {
+            *interaction = Interaction::None
+        }
+    }
+}
+
 /// Tracks when one of the gizmo handles has been clicked on.
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn grab_gizmo(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     mut gizmo_events: EventWriter<TransformGizmoEvent>,
-    mut gizmo_query: Query<(&Children, &mut TransformGizmo, &Transform)>,
-    gizmo_raycast_source: Query<&picking::GizmoPickSource>,
-    hover_query: Query<&TransformGizmoInteraction>,
+    mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &Transform)>,
     selected_items_query: Query<(&Selection, &Transform, Entity)>,
     initial_transform_query: Query<Entity, With<InitialTransform>>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        for (children, mut gizmo, _transform) in gizmo_query.iter_mut() {
-            let mut gizmo_clicked = false;
-            // First check if the gizmo is even being hovered over
-            if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
-                .iter()
-                .last()
-                .expect("Missing gizmo raycast source")
-                .intersect_top()
-            {
-                for child in children
-                    .iter()
-                    .filter(|entity| **entity == topmost_gizmo_entity)
-                {
-                    if let Ok(gizmo_interaction) = hover_query.get(*child) {
-                        gizmo.current_interaction = Some(*gizmo_interaction);
-                        gizmo_clicked = true;
-                        //info!("Gizmo handle {:?} selected", gizmo_interaction);
-                    }
-                }
-            }
-            if gizmo_clicked {
+        for (mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
+            if *interaction == Interaction::Hovered {
+                *interaction = Interaction::Clicked;
                 // Dragging has started, store the initial position of all selected meshes
                 for (selection, transform, entity) in selected_items_query.iter() {
                     if selection.selected() {
@@ -297,7 +323,8 @@ fn grab_gizmo(
             }
         }
     } else if mouse_button_input.just_released(MouseButton::Left) {
-        for (_children, mut gizmo, transform) in gizmo_query.iter_mut() {
+        for (mut gizmo, mut interaction, transform) in gizmo_query.iter_mut() {
+            *interaction = Interaction::None;
             if let (Some(from), Some(interaction)) =
                 (gizmo.initial_transform, gizmo.current_interaction())
             {
@@ -579,40 +606,43 @@ fn build_gizmo(
                 .insert(GizmoPass)
                 .remove::<MainPass>();
             /*
-                        // Scaling Handles
-                        parent
-                            .spawn_bundle(PbrBundle {
-                                mesh: cube_mesh.clone(),
-                                material: gizmo_material_x_selectable.clone(),
-                                transform: Transform::from_translation(Vec3::new(arc_radius, 0.0, 0.0)),
-                                ..Default::default()
-                            })
-                            .insert(PickableGizmo::default())
-                            .insert(TransformGizmoInteraction::ScaleAxis(Vec3::X))
-                            .insert(GizmoPass)
-                            .remove::<MainPass>();
-                        parent
-                            .spawn_bundle(PbrBundle {
-                                mesh: cube_mesh.clone(),
-                                material: gizmo_material_y_selectable.clone(),
-                                transform: Transform::from_translation(Vec3::new(0.0, arc_radius, 0.0)),
-                                ..Default::default()
-                            })
-                            .insert(PickableGizmo::default())
-                            .insert(TransformGizmoInteraction::ScaleAxis(Vec3::Y))
-                            .insert(GizmoPass)
-                            .remove::<MainPass>();
-                        parent
-                            .spawn_bundle(PbrBundle {
-                                mesh: cube_mesh.clone(),
-                                material: gizmo_material_z_selectable.clone(),
-                                transform: Transform::from_translation(Vec3::new(0.0, 0.0, arc_radius)),
-                                ..Default::default()
-                            })
-                            .insert(PickableGizmo::default())
-                            .insert(TransformGizmoInteraction::ScaleAxis(Vec3::Z))
-                            .insert(GizmoPass)
-                            .remove::<MainPass>();
+            // Scaling Handles
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: cube_mesh.clone(),
+                    material: gizmo_material_x_selectable.clone(),
+                    transform: Transform::from_translation(Vec3::new(arc_radius, 0.0, 0.0)),
+                    ..Default::default()
+                })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::ScaleAxis(Vec3::X))
+                .insert(PriorityInteractable)
+                .insert(GizmoPass)
+                .remove::<MainPass>();
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: cube_mesh.clone(),
+                    material: gizmo_material_y_selectable.clone(),
+                    transform: Transform::from_translation(Vec3::new(0.0, arc_radius, 0.0)),
+                    ..Default::default()
+                })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::ScaleAxis(Vec3::Y))
+                .insert(PriorityInteractable)
+                .insert(GizmoPass)
+                .remove::<MainPass>();
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: cube_mesh.clone(),
+                    material: gizmo_material_z_selectable.clone(),
+                    transform: Transform::from_translation(Vec3::new(0.0, 0.0, arc_radius)),
+                    ..Default::default()
+                })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::ScaleAxis(Vec3::Z))
+                .insert(PriorityInteractable)
+                .insert(GizmoPass)
+                .remove::<MainPass>();
             */
         })
         .insert(GizmoPass)
