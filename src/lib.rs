@@ -1,3 +1,4 @@
+use bevy::ecs::schedule::ShouldRun;
 use bevy::{prelude::*, render::render_graph::base::MainPass, transform::TransformSystem};
 use bevy_mod_picking::{
     self, PickingBlocker, PickingCamera, PickingSystem, Primitive3d, Selection,
@@ -13,6 +14,19 @@ mod normalization;
 pub mod picking;
 mod render_graph;
 mod truncated_torus;
+
+pub struct GizmoSystemsEnabled(pub bool);
+
+#[derive(Clone, Hash, PartialEq, Eq, Debug, RunCriteriaLabel)]
+pub struct GizmoSystemsEnabledCriteria;
+
+fn plugin_enabled(enabled: Res<GizmoSystemsEnabled>) -> ShouldRun {
+    if enabled.0 {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum TransformGizmoSystem {
@@ -37,35 +51,42 @@ impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TransformGizmoEvent>()
             .add_startup_system(build_gizmo)
+            .insert_resource(GizmoSystemsEnabled(true))
             .add_plugin(picking::GizmoPickingPlugin)
             .add_plugin(normalization::Ui3dNormalization)
-            .add_system_to_stage(
+            .add_system_set_to_stage(
                 CoreStage::PreUpdate,
-                hover_gizmo
-                    .label(TransformGizmoSystem::Hover)
-                    .after(RaycastSystem::UpdateRaycast),
+                SystemSet::new()
+                    .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
+                    .with_system(
+                        hover_gizmo
+                            .label(TransformGizmoSystem::Hover)
+                            .after(RaycastSystem::UpdateRaycast),
+                    )
+                    .with_system(
+                        grab_gizmo
+                            .label(TransformGizmoSystem::Grab)
+                            .after(TransformGizmoSystem::Hover)
+                            .before(PickingSystem::PauseForBlockers),
+                    ),
             )
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                grab_gizmo
-                    .label(TransformGizmoSystem::Grab)
-                    .after(TransformGizmoSystem::Hover)
-                    .before(PickingSystem::PauseForBlockers),
-            )
-            .add_system_to_stage(
+            .add_system_set_to_stage(
                 CoreStage::PostUpdate,
-                drag_gizmo
-                    .label(TransformGizmoSystem::Drag)
-                    //.after(TransformGizmoSystem::Grab)
-                    .before(FseNormalizeSystem::Normalize)
-                    .before(TransformSystem::TransformPropagate),
-            )
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                place_gizmo
-                    .label(TransformGizmoSystem::Place)
-                    .after(TransformSystem::TransformPropagate)
-                    .after(TransformGizmoSystem::Drag),
+                SystemSet::new()
+                    .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
+                    .with_system(
+                        drag_gizmo
+                            .label(TransformGizmoSystem::Drag)
+                            //.after(TransformGizmoSystem::Grab)
+                            .before(FseNormalizeSystem::Normalize)
+                            .before(TransformSystem::TransformPropagate),
+                    )
+                    .with_system(
+                        place_gizmo
+                            .label(TransformGizmoSystem::Place)
+                            .after(TransformSystem::TransformPropagate)
+                            .after(TransformGizmoSystem::Drag),
+                    ),
             );
         {
             render_graph::add_gizmo_graph(&mut app.world);

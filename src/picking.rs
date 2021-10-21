@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_mod_raycast::RaycastSystem;
 
+use crate::GizmoSystemsEnabledCriteria;
+
 pub type GizmoPickSource = bevy_mod_raycast::RayCastSource<GizmoRaycastSet>;
 pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 
@@ -9,19 +11,19 @@ pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(
+        app.add_system_set_to_stage(
             CoreStage::PreUpdate,
-            bevy_mod_raycast::build_rays::<GizmoRaycastSet>.label(RaycastSystem::BuildRays),
-        )
-        .add_system_to_stage(
-            CoreStage::PreUpdate,
-            bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
-                .label(RaycastSystem::UpdateRaycast)
-                .after(RaycastSystem::BuildRays),
-        )
-        .add_system_to_stage(
-            CoreStage::PreUpdate,
-            update_gizmo_raycast_with_cursor.before(RaycastSystem::BuildRays),
+            SystemSet::new()
+                .with_run_criteria(GizmoSystemsEnabledCriteria)
+                .with_system(
+                    bevy_mod_raycast::build_rays::<GizmoRaycastSet>.label(RaycastSystem::BuildRays),
+                )
+                .with_system(
+                    bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
+                        .label(RaycastSystem::UpdateRaycast)
+                        .after(RaycastSystem::BuildRays),
+                )
+                .with_system(update_gizmo_raycast_with_cursor.before(RaycastSystem::BuildRays)),
         );
     }
 }

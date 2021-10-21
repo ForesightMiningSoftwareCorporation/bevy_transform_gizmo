@@ -1,5 +1,7 @@
 use bevy::{prelude::*, render::camera::Camera, transform::TransformSystem};
 
+use crate::GizmoSystemsEnabledCriteria;
+
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum FseNormalizeSystem {
     Normalize,
@@ -12,6 +14,7 @@ impl Plugin for Ui3dNormalization {
             CoreStage::PostUpdate,
             normalize
                 .label(FseNormalizeSystem::Normalize)
+                .with_run_criteria(GizmoSystemsEnabledCriteria)
                 .before(TransformSystem::TransformPropagate),
         );
     }
