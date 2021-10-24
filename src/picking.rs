@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use bevy_mod_raycast::RaycastSystem;
 
-use crate::TransformGizmo;
+use crate::GizmoSystemsEnabledCriteria;
 
 pub type GizmoPickSource = bevy_mod_raycast::RayCastSource<GizmoRaycastSet>;
 pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
@@ -10,28 +11,20 @@ pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<bevy_mod_raycast::PluginState<GizmoRaycastSet>>()
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                bevy_mod_raycast::build_rays::<GizmoRaycastSet>
-                    .label(bevy_mod_raycast::RaycastSystem::BuildRays),
-            )
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
-                    .label(bevy_mod_raycast::RaycastSystem::UpdateRaycast)
-                    .after(bevy_mod_raycast::RaycastSystem::BuildRays),
-            )
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                update_gizmo_raycast_with_cursor.before(bevy_mod_raycast::RaycastSystem::BuildRays),
-            )
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                disable_mesh_picking_during_gizmo_hover
-                    .before(bevy_mod_picking::PickingSystem::Focus)
-                    .after(bevy_mod_raycast::RaycastSystem::UpdateRaycast),
-            );
+        app.add_system_set_to_stage(
+            CoreStage::PreUpdate,
+            SystemSet::new()
+                .with_run_criteria(GizmoSystemsEnabledCriteria)
+                .with_system(
+                    bevy_mod_raycast::build_rays::<GizmoRaycastSet>.label(RaycastSystem::BuildRays),
+                )
+                .with_system(
+                    bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
+                        .label(RaycastSystem::UpdateRaycast)
+                        .after(RaycastSystem::BuildRays),
+                )
+                .with_system(update_gizmo_raycast_with_cursor.before(RaycastSystem::BuildRays)),
+        );
     }
 }
 
@@ -49,24 +42,4 @@ fn update_gizmo_raycast_with_cursor(
                 bevy_mod_raycast::RayCastMethod::Screenspace(cursor_latest.position);
         }
     }
-}
-
-/// Disable the picking plugin when the mouse is over one of the gizmo handles.
-fn disable_mesh_picking_during_gizmo_hover(
-    mut picking_state: ResMut<bevy_mod_picking::PickingPluginState>,
-    query: Query<&bevy_mod_raycast::RayCastSource<GizmoRaycastSet>>,
-    gizmo_query: Query<&TransformGizmo>,
-) {
-    let not_hovering_gizmo = if let Some(source) = query.iter().last() {
-        source.intersect_top().is_none()
-    } else {
-        true
-    };
-    let gizmo_inactive = if let Some(gizmo) = gizmo_query.iter().last() {
-        gizmo.current_interaction().is_none()
-    } else {
-        return;
-    };
-    // Set the picking state based on current user interaction state
-    picking_state.enabled = gizmo_inactive && not_hovering_gizmo;
 }
