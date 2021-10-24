@@ -186,12 +186,11 @@ fn drag_gizmo(
         return;
     };
     if let Some(interaction) = gizmo.current_interaction {
-        let gizmo_transform = transform_queries
+        let gizmo_transform = *transform_queries
             .q1()
             .iter_mut()
             .last()
-            .expect("Gizmo missing a `Transform` when there is some gizmo interaction.")
-            .clone();
+            .expect("Gizmo missing a `Transform` when there is some gizmo interaction.");
         let gizmo_initial = match &gizmo.initial_transform {
             Some(transform) => *transform,
             None => {
