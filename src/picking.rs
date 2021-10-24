@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use bevy_mod_raycast::DefaultRaycastingPlugin;
+use bevy_mod_raycast::RaycastSystem;
 
-use crate::TransformGizmo;
+use crate::GizmoSystemsEnabledCriteria;
 
 pub type GizmoPickSource = bevy_mod_raycast::RayCastSource<GizmoRaycastSet>;
 pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
@@ -11,17 +11,20 @@ pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(DefaultRaycastingPlugin::<GizmoRaycastSet>::default())
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                update_gizmo_raycast_with_cursor.before(bevy_mod_raycast::RaycastSystem::BuildRays),
-            )
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                disable_mesh_picking_during_gizmo_hover
-                    .before(bevy_mod_picking::PickingSystem::Focus)
-                    .after(bevy_mod_raycast::RaycastSystem::UpdateRaycast),
-            );
+        app.add_system_set_to_stage(
+            CoreStage::PreUpdate,
+            SystemSet::new()
+                .with_run_criteria(GizmoSystemsEnabledCriteria)
+                .with_system(
+                    bevy_mod_raycast::build_rays::<GizmoRaycastSet>.label(RaycastSystem::BuildRays),
+                )
+                .with_system(
+                    bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
+                        .label(RaycastSystem::UpdateRaycast)
+                        .after(RaycastSystem::BuildRays),
+                )
+                .with_system(update_gizmo_raycast_with_cursor.before(RaycastSystem::BuildRays)),
+        );
     }
 }
 
@@ -39,25 +42,4 @@ fn update_gizmo_raycast_with_cursor(
                 bevy_mod_raycast::RayCastMethod::Screenspace(cursor_latest.position);
         }
     }
-}
-
-/// Disable the picking plugin when the mouse is over one of the gizmo handles.
-fn disable_mesh_picking_during_gizmo_hover(
-    mut picking_state: ResMut<bevy_mod_picking::PickingPluginsState>,
-    query: Query<&GizmoPickSource>,
-    gizmo_query: Query<&TransformGizmo>,
-) {
-    let not_hovering_gizmo = if let Ok(source) = query.get_single() {
-        source.intersect_top().is_none()
-    } else {
-        true
-    };
-    let gizmo_inactive = if let Ok(gizmo) = gizmo_query.get_single() {
-        gizmo.current_interaction().is_none()
-    } else {
-        error!("Not exactly one gizmo.");
-        return;
-    };
-    // Set the picking state based on current user interaction state
-    picking_state.enable_interacting = gizmo_inactive && not_hovering_gizmo;
 }
