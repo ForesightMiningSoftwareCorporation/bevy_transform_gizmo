@@ -77,7 +77,6 @@ impl Plugin for TransformGizmoPlugin {
                     .with_system(
                         drag_gizmo
                             .label(TransformGizmoSystem::Drag)
-                            //.after(TransformGizmoSystem::Grab)
                             .before(FseNormalizeSystem::Normalize)
                             .before(TransformSystem::TransformPropagate),
                     )
@@ -117,7 +116,7 @@ impl Default for TransformGizmoBundle {
             },
             gizmo: TransformGizmo::default(),
             global_transform: GlobalTransform::default(),
-            normalize: Normalize3d,
+            normalize: Normalize3d::default(),
         }
     }
 }
@@ -291,8 +290,7 @@ fn hover_gizmo(
 ) {
     for (children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
-            .iter()
-            .last()
+            .get_single()
             .expect("Missing gizmo raycast source")
             .intersect_top()
         {
@@ -379,10 +377,11 @@ fn place_gizmo(
         .filter(|(s, _t)| s.selected())
         .count();
     // Set the gizmo's position and visibility
-    if let Some((mut transform, mut visible)) = gizmo_query.iter_mut().last() {
-        transform.translation = position;
-        visible.is_visible = selected_items > 0;
-    }
+    let (mut transform, mut visible) = gizmo_query
+        .get_single_mut()
+        .expect("Multiple gizmos found, only one expected");
+    transform.translation = position;
+    visible.is_visible = selected_items > 0;
 }
 
 /// Startup system that builds the procedural mesh and materials of the gizmo.
