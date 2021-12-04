@@ -16,6 +16,7 @@ mod render_graph;
 mod truncated_torus;
 
 pub struct GizmoSystemsEnabled(pub bool);
+pub use normalization::Ui3dNormalization;
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, RunCriteriaLabel)]
 pub struct GizmoSystemsEnabledCriteria;
@@ -53,7 +54,6 @@ impl Plugin for TransformGizmoPlugin {
             .add_startup_system(build_gizmo)
             .insert_resource(GizmoSystemsEnabled(true))
             .add_plugin(picking::GizmoPickingPlugin)
-            .add_plugin(normalization::Ui3dNormalization)
             .add_system_set_to_stage(
                 CoreStage::PreUpdate,
                 SystemSet::new()
