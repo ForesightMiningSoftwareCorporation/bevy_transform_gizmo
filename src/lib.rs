@@ -80,7 +80,6 @@ impl Plugin for TransformGizmoPlugin {
                     .with_system(
                         drag_gizmo
                             .label(TransformGizmoSystem::Drag)
-                            //.after(TransformGizmoSystem::Grab)
                             .before(FseNormalizeSystem::Normalize)
                             .before(TransformSystem::TransformPropagate),
                     )
@@ -115,7 +114,7 @@ impl Default for TransformGizmoBundle {
             visible: Visibility { is_visible: false },
             gizmo: TransformGizmo::default(),
             global_transform: GlobalTransform::default(),
-            normalize: Normalize3d,
+            normalize: Normalize3d::default(),
         }
     }
 }
@@ -292,8 +291,7 @@ fn hover_gizmo(
 ) {
     for (children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
-            .iter()
-            .last()
+            .get_single()
             .expect("Missing gizmo raycast source")
             .intersect_top()
         {
