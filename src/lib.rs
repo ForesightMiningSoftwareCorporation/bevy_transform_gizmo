@@ -39,8 +39,8 @@ pub enum TransformGizmoSystem {
 
 #[derive(Debug)]
 pub struct TransformGizmoEvent {
-    pub from: Transform,
-    pub to: Transform,
+    pub from: GlobalTransform,
+    pub to: GlobalTransform,
     pub interaction: TransformGizmoInteraction,
 }
 
@@ -77,7 +77,6 @@ impl Plugin for TransformGizmoPlugin {
                     .with_system(
                         drag_gizmo
                             .label(TransformGizmoSystem::Drag)
-                            .before(FseNormalizeSystem::Normalize)
                             .before(TransformSystem::TransformPropagate),
                     )
                     .with_system(
@@ -116,7 +115,7 @@ impl Default for TransformGizmoBundle {
             },
             gizmo: TransformGizmo::default(),
             global_transform: GlobalTransform::default(),
-            normalize: Normalize3d::default(),
+            normalize: Normalize3d::new(1.5, 150.0),
         }
     }
 }
@@ -128,7 +127,7 @@ pub struct TransformGizmo {
     // much total dragging has occurred without accumulating error across frames.
     drag_start: Option<Vec3>,
     // Initial transform of the gizmo
-    initial_transform: Option<Transform>,
+    initial_transform: Option<GlobalTransform>,
 }
 
 impl TransformGizmo {
@@ -149,28 +148,35 @@ pub enum TransformGizmoInteraction {
 
 #[derive(Component)]
 struct InitialTransform {
-    transform: Transform,
+    transform: GlobalTransform,
 }
 
 /// Updates the position of the gizmo and selected meshes while the gizmo is being dragged.
 #[allow(clippy::type_complexity)]
 fn drag_gizmo(
     pick_cam: Query<&PickingCamera>,
-    mut gizmo_query: Query<(&mut TransformGizmo, &GlobalTransform, &Interaction)>,
+    mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_queries: QuerySet<(
-        QueryState<(&Selection, &mut Transform, &InitialTransform)>,
-        QueryState<&mut Transform, With<TransformGizmo>>,
+        QueryState<(&Selection, &mut GlobalTransform, &InitialTransform)>,
+        QueryState<&mut GlobalTransform, With<TransformGizmo>>,
+        QueryState<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
     )>,
 ) {
     // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
     // should have no effect on the handle. We can do this by projecting the vector from the handle
     // click point to mouse's current position, onto the axis of the direction we are dragging. See
     // the wiki article for details: https://en.wikipedia.org/wiki/Vector_projection
-    let (mut gizmo, gizmo_global) = if let Some((gizmo, global_transform, &Interaction::Clicked)) =
-        gizmo_query.iter_mut().last()
+    let gizmo_global = if let Ok((global_transform, &Interaction::Clicked)) =
+        transform_queries.q2().get_single()
     {
-        (gizmo, global_transform)
+        global_transform.to_owned()
     } else {
+        return;
+    };
+    let mut gizmo = if let Ok(g) = gizmo_mut.get_single_mut() {
+        g
+    } else {
+        error!("Number of transform gizmos is != 1");
         return;
     };
     let gizmo_origin = gizmo_global.translation;
@@ -229,14 +235,14 @@ fn drag_gizmo(
                     .iter_mut()
                     .filter(|(s, _t, _i)| s.selected())
                     .for_each(|(_s, mut t, i)| {
-                        *t = Transform {
+                        *t = GlobalTransform {
                             translation: i.transform.translation + translation,
                             ..i.transform
                         }
                     });
 
                 transform_queries.q1().iter_mut().for_each(|mut t| {
-                    *t = Transform {
+                    *t = GlobalTransform {
                         translation: gizmo_initial.translation + translation,
                         ..gizmo_initial
                     }
@@ -272,7 +278,7 @@ fn drag_gizmo(
                     .iter_mut()
                     .filter(|(s, _t, _i)| s.selected())
                     .for_each(|(_s, mut t, i)| {
-                        *t = Transform {
+                        *t = GlobalTransform {
                             rotation: rotation * i.transform.rotation,
                             ..i.transform
                         }
@@ -317,8 +323,8 @@ fn grab_gizmo(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     mut gizmo_events: EventWriter<TransformGizmoEvent>,
-    mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &Transform)>,
-    selected_items_query: Query<(&Selection, &Transform, Entity)>,
+    mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &GlobalTransform)>,
+    selected_items_query: Query<(&Selection, &GlobalTransform, Entity)>,
     initial_transform_query: Query<Entity, With<InitialTransform>>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
@@ -400,12 +406,12 @@ fn build_gizmo(
     }));
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
         height: 0.3,
-        radius: 0.1,
+        radius: 0.12,
         ..Default::default()
     }));
     let sphere_mesh = meshes.add(Mesh::from(shape::Icosphere {
         radius: 0.12,
-        subdivisions: 8,
+        subdivisions: 3,
     }));
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,

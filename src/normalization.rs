@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::camera::Camera, transform::TransformSystem};
 
-use crate::GizmoSystemsEnabledCriteria;
+use crate::{GizmoSystemsEnabledCriteria, TransformGizmoSystem};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum FseNormalizeSystem {
@@ -15,7 +15,8 @@ impl Plugin for Ui3dNormalization {
             normalize
                 .label(FseNormalizeSystem::Normalize)
                 .with_run_criteria(GizmoSystemsEnabledCriteria)
-                .before(TransformSystem::TransformPropagate),
+                .after(TransformSystem::TransformPropagate)
+                .after(TransformGizmoSystem::Place),
         );
     }
 }
@@ -23,54 +24,92 @@ impl Plugin for Ui3dNormalization {
 /// Marker struct that marks entities with meshes that should be scaled relative to the camera.
 #[derive(Component)]
 pub struct Normalize3d {
-    pub scale: f32,
+    /// Length of the object in world space units
+    pub size_in_world: f32,
+    /// Desired length of the object in pixels
+    pub desired_pixel_size: f32,
 }
-impl Default for Normalize3d {
-    fn default() -> Self {
-        Self { scale: 1.0 }
+impl Normalize3d {
+    pub fn new(size_in_world: f32, desired_pixel_size: f32) -> Self {
+        Normalize3d {
+            size_in_world,
+            desired_pixel_size,
+        }
     }
 }
 
 #[allow(clippy::type_complexity)]
 pub fn normalize(
+    windows: Res<Windows>,
     mut query: QuerySet<(
-        QueryState<(&Transform, &Camera)>,
-        QueryState<(&mut Transform, &Normalize3d)>,
+        QueryState<(&GlobalTransform, &Camera)>,
+        QueryState<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
     )>,
 ) {
     // TODO: can be improved by manually specifying the active camera to normalize against. The
     // majority of cases will only use a single camera for this viewer, so this is sufficient.
     let (camera_position, camera) = query.q0().get_single().expect("Not exactly one camera");
     let camera_position = camera_position.to_owned();
-
-    let projection = camera.projection_matrix;
-    let z_0 = projection.project_point3(Vec3::new(1.0, 0.0, -1.0)).x;
-    let z_1 = projection.project_point3(Vec3::new(1.0, 0.0, -2.0)).x;
-    let projection_scale = (z_0 / z_1).powf(1.0 / 3.0);
-
     let view = camera_position.compute_matrix().inverse();
+    let camera = Camera {
+        window: camera.window,
+        projection_matrix: camera.projection_matrix,
+        ..Default::default()
+    };
 
-    for (mut transform, normalize) in query.q1().iter_mut() {
-        let distance = view.transform_point3(transform.translation).z.abs();
-        transform.scale =
-            Vec3::splat((1.0 + (distance * projection_scale) - distance) * 0.2 * normalize.scale);
+    for (mut transform, mut global_transform, normalize) in query.q1().iter_mut() {
+        let distance = view.transform_point3(global_transform.translation).z;
+
+        let pixel_end = if let Some(coords) = world_to_screen(
+            &camera,
+            &windows,
+            &GlobalTransform::default(),
+            Vec3::new(
+                normalize.size_in_world * global_transform.scale.x,
+                0.0,
+                distance,
+            ),
+        ) {
+            coords
+        } else {
+            break;
+        };
+        let pixel_root = if let Some(coords) = world_to_screen(
+            &camera,
+            &windows,
+            &GlobalTransform::default(),
+            Vec3::new(0.0, 0.0, distance),
+        ) {
+            coords
+        } else {
+            break;
+        };
+
+        let actual_pixel_size = pixel_root.distance(pixel_end);
+
+        let required_scale = normalize.desired_pixel_size / actual_pixel_size;
+
+        global_transform.scale *= Vec3::splat(required_scale);
+        transform.scale = global_transform.scale;
     }
 }
 
-/*let z_0 = camera
-    .projection_matrix
-    .project_point3(Vec3::new(1.0, 0.0, 1.0))
-    .x;
-let z_1 = camera
-    .projection_matrix
-    .project_point3(Vec3::new(1.0, 0.0, 2.0))
-    .x;
-let projection_scale = ((z_1 / z_0).powi(2) * 3.0).sqrt();
-
-let view = camera_position.compute_matrix().inverse();
-
-for (mut transform, normalize) in query.q1().iter_mut() {
-    let distance = view.transform_point3(transform.translation).z.abs();
-    transform.scale =
-        Vec3::splat((1.0 + distance - (distance * projection_scale)) * 0.2 * normalize.scale);
-}*/
+pub fn world_to_screen(
+    camera: &Camera,
+    windows: &Windows,
+    camera_transform: &GlobalTransform,
+    world_position: Vec3,
+) -> Option<Vec2> {
+    let window = windows.get(camera.window)?;
+    let window_size = Vec2::new(window.width(), window.height());
+    // Build a transform to convert from world to NDC using camera data
+    let world_to_ndc: Mat4 = camera.projection_matrix * camera_transform.compute_matrix().inverse();
+    let ndc_space_coords: Vec3 = world_to_ndc.project_point3(world_position);
+    // NDC z-values outside of 0 < z < 1 are behind the camera and are thus not in screen space
+    if ndc_space_coords.z < 0.0 || ndc_space_coords.z > 1.0 || ndc_space_coords.z.is_nan() {
+        return None;
+    }
+    // Once in NDC space, we can discard the z element and rescale x/y to fit the screen
+    let screen_space_coords = (ndc_space_coords.truncate() + Vec2::ONE) / 2.0 * window_size;
+    Some(screen_space_coords)
+}
