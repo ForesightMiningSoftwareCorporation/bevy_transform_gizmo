@@ -93,7 +93,10 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::TranslateAxis(Vec3::X));
+                .insert(TransformGizmoInteraction::TranslateAxis {
+                    original: Vec3::X,
+                    axis: Vec3::X,
+                });
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
@@ -102,7 +105,10 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::TranslateAxis(Vec3::Y));
+                .insert(TransformGizmoInteraction::TranslateAxis {
+                    original: Vec3::Y,
+                    axis: Vec3::Y,
+                });
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
@@ -114,7 +120,10 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::TranslateAxis(Vec3::Z));
+                .insert(TransformGizmoInteraction::TranslateAxis {
+                    original: Vec3::Z,
+                    axis: Vec3::Z,
+                });
             /*
                         // Origin
                         parent
@@ -164,7 +173,10 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::RotateAxis(Vec3::X));
+                .insert(TransformGizmoInteraction::RotateAxis {
+                    original: Vec3::X,
+                    axis: Vec3::X,
+                });
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
@@ -177,7 +189,10 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::RotateAxis(Vec3::Y));
+                .insert(TransformGizmoInteraction::RotateAxis {
+                    original: Vec3::Y,
+                    axis: Vec3::Y,
+                });
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
@@ -190,7 +205,10 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::RotateAxis(Vec3::Z));
+                .insert(TransformGizmoInteraction::RotateAxis {
+                    original: Vec3::Z,
+                    axis: Vec3::Z,
+                });
             /*
                         // Scaling Handles
                         parent

@@ -9,7 +9,10 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugin(bevy_mod_picking::DefaultPickingPlugins)
-        .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
+        .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin::new(
+            // Align the gizmo to a different coordinate system.
+            Quat::from_euler(bevy::math::EulerRot::XYZ, 0.5, 0.2, -0.1),
+        ))
         .add_plugin(bevy_transform_gizmo::Ui3dNormalization)
         .add_startup_system(setup)
         .run();
