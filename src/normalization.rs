@@ -84,11 +84,8 @@ pub fn normalize(
         } else {
             break;
         };
-
         let actual_pixel_size = pixel_root.distance(pixel_end);
-
         let required_scale = normalize.desired_pixel_size / actual_pixel_size;
-
         global_transform.scale *= Vec3::splat(required_scale);
         transform.scale = global_transform.scale;
     }
