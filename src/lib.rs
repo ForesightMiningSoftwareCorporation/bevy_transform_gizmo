@@ -76,6 +76,7 @@ impl Plugin for TransformGizmoPlugin {
             .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
             .add_plugin(picking::GizmoPickingPlugin)
             .add_event::<TransformGizmoEvent>()
+            .add_plugin(Ui3dNormalization)
             .add_system_set_to_stage(
                 CoreStage::PreUpdate,
                 SystemSet::new()
@@ -146,6 +147,7 @@ pub struct TransformGizmo {
     // Point in space where mouse-gizmo interaction started (on mouse down), used to compare how
     // much total dragging has occurred without accumulating error across frames.
     drag_start: Option<Vec3>,
+    origin_drag_start: Option<Vec3>,
     // Initial transform of the gizmo
     initial_transform: Option<GlobalTransform>,
 }
@@ -178,30 +180,10 @@ fn drag_gizmo(
     mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_queries: QuerySet<(
         QueryState<(&Selection, &mut Transform, &InitialTransform)>,
-        QueryState<&Transform, With<TransformGizmo>>,
         QueryState<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
     )>,
 ) {
-    // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
-    // should have no effect on the handle. We can do this by projecting the vector from the handle
-    // click point to mouse's current position, onto the axis of the direction we are dragging. See
-    // the wiki article for details: https://en.wikipedia.org/wiki/Vector_projection
-    let gizmo_global_transform = if let Ok((global_transform, &Interaction::Clicked)) =
-        transform_queries.q2().get_single()
-    {
-        global_transform.to_owned()
-    } else {
-        return;
-    };
-    let mut gizmo = if let Ok(g) = gizmo_mut.get_single_mut() {
-        g
-    } else {
-        error!("Number of transform gizmos is != 1");
-        return;
-    };
-
-    let gizmo_origin = gizmo_global_transform.translation;
-    let picking_camera = if let Ok(cam) = pick_cam.get_single() {
+    let picking_camera = if let Some(cam) = pick_cam.iter().last() {
         cam
     } else {
         error!("Not exactly one picking camera.");
@@ -213,11 +195,29 @@ fn drag_gizmo(
         error!("Picking camera does not have a ray.");
         return;
     };
-    let gizmo_transform = if let Ok(transform) = transform_queries.q1().get_single() {
-        *transform
+    // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
+    // should have no effect on the handle. We can do this by projecting the vector from the handle
+    // click point to mouse's current position, onto the axis of the direction we are dragging. See
+    // the wiki article for details: https://en.wikipedia.org/wiki/Vector_projection
+    let gizmo_transform =
+        if let Ok((transform, &Interaction::Clicked)) = transform_queries.q1().get_single() {
+            transform.to_owned()
+        } else {
+            return;
+        };
+    let mut gizmo = if let Ok(g) = gizmo_mut.get_single_mut() {
+        g
     } else {
-        error!("Not exactly one transform gizmo with a transform.");
+        error!("Number of transform gizmos is != 1");
         return;
+    };
+    let gizmo_origin = match gizmo.origin_drag_start {
+        Some(origin) => origin,
+        None => {
+            let origin = gizmo_transform.translation;
+            gizmo.origin_drag_start = Some(origin);
+            origin
+        }
     };
     if let Some(interaction) = gizmo.current_interaction {
         if gizmo.initial_transform.is_none() {
@@ -225,28 +225,31 @@ fn drag_gizmo(
         }
         match interaction {
             TransformGizmoInteraction::TranslateAxis { original: _, axis } => {
+                let vertical_vector = picking_ray.direction().cross(axis).normalize();
+                let plane_normal = axis.cross(vertical_vector).normalize();
+                let plane_origin = gizmo_origin;
                 let cursor_plane_intersection = if let Some(intersection) = picking_camera
                     .intersect_primitive(Primitive3d::Plane {
-                        normal: picking_ray.direction(),
-                        point: gizmo_origin,
+                        normal: plane_normal,
+                        point: plane_origin,
                     }) {
                     intersection.position()
                 } else {
                     return;
                 };
-                let cursor_vector: Vec3 = cursor_plane_intersection - gizmo_origin;
-                let drag_start = match &gizmo.drag_start {
+                let cursor_vector: Vec3 = cursor_plane_intersection - plane_origin;
+                let cursor_projected_onto_handle = match &gizmo.drag_start {
                     Some(drag_start) => *drag_start,
                     None => {
                         let handle_vector = axis;
                         let cursor_projected_onto_handle = cursor_vector
                             .dot(handle_vector.normalize())
                             * handle_vector.normalize();
-                        gizmo.drag_start = Some(gizmo_origin + cursor_projected_onto_handle);
+                        gizmo.drag_start = Some(cursor_projected_onto_handle + plane_origin);
                         return;
                     }
                 };
-                let selected_handle_vec = drag_start - gizmo_origin;
+                let selected_handle_vec = cursor_projected_onto_handle - plane_origin;
                 let new_handle_vec = cursor_vector.dot(selected_handle_vec.normalize())
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
