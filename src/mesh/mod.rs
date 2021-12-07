@@ -22,12 +22,12 @@ pub fn build_gizmo(
     }));
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
         height: 0.3,
-        radius: 0.1,
+        radius: 0.12,
         ..Default::default()
     }));
     let sphere_mesh = meshes.add(Mesh::from(shape::Icosphere {
         radius: 0.12,
-        subdivisions: 8,
+        subdivisions: 3,
     }));
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
