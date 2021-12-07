@@ -49,7 +49,7 @@ pub struct GizmoTransformable;
 pub struct GizmoSettings {
     /// Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     /// coordinate system.
-    alignment_rotation: Quat,
+    pub alignment_rotation: Quat,
 }
 
 #[derive(Default)]
