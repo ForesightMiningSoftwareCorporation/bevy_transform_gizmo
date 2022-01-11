@@ -46,12 +46,16 @@ pub fn normalize(
         QueryState<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
     )>,
 ) {
-    let (camera_position, camera) = query
+    let (camera_position, camera) = if let Some((pos, cam)) = query
         .q0()
         .iter()
         .filter(|(_, cam)| cam.name == Some("camera_3d".to_string()))
         .next()
-        .expect("No camera found");
+    {
+        (pos, cam)
+    } else {
+        return;
+    };
     let camera_position = camera_position.to_owned();
     let view = camera_position.compute_matrix().inverse();
     let camera = Camera {
