@@ -46,9 +46,12 @@ pub fn normalize(
         QueryState<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
     )>,
 ) {
-    // TODO: can be improved by manually specifying the active camera to normalize against. The
-    // majority of cases will only use a single camera for this viewer, so this is sufficient.
-    let (camera_position, camera) = query.q0().get_single().expect("Not exactly one camera");
+    let (camera_position, camera) = query
+        .q0()
+        .iter()
+        .filter(|(_, cam)| cam.name == Some("camera_3d".to_string()))
+        .next()
+        .expect("No camera found");
     let camera_position = camera_position.to_owned();
     let view = camera_position.compute_matrix().inverse();
     let camera = Camera {

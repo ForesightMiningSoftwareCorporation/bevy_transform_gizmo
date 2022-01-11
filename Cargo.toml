@@ -8,12 +8,12 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false }
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" }
-bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }
+bevy = { git = "https://github.com/bevyengine/bevy", default-features = false, rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "56113c5ba478866a7fc0a72938a24f174032c6ad" }
+bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast", rev = "32e4db62746cbbba3f0df1a45af84bc45dedd23a" }
 
 [dev-dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
+bevy = { git = "https://github.com/bevyengine/bevy", default-features = false, rev = "997eae61854b362c10810884966ac605121e04d7", features = [
     "render",
     "bevy_wgpu",
     "bevy_winit",
@@ -21,3 +21,29 @@ bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-fe
     "x11",
     "jpeg",
 ] }
+
+[patch."https://github.com/bevyengine/bevy"]
+bevy = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_app = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_asset = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_render = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_utils = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_input = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_core = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_transform = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_scene = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_window = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_winit = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_sprite = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_text = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_ui = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_pbr = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_diagnostic = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_derive = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+bevy_ecs = { git = "https://github.com/bevyengine//bevy", rev = "997eae61854b362c10810884966ac605121e04d7" }
+
+[patch."https://github.com/aevyrie/bevy_mod_raycast"]
+bevy_mod_raycast = { git = "https://github.com/aevyrie//bevy_mod_raycast", rev = "32e4db62746cbbba3f0df1a45af84bc45dedd23a" }
+
+[patch."https://github.com/aevyrie/bevy_mod_picking"]
+bevy_mod_picking = { git = "https://github.com/aevyrie//bevy_mod_picking", rev = "56113c5ba478866a7fc0a72938a24f174032c6ad" }
