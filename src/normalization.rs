@@ -49,7 +49,9 @@ pub fn normalize(
     let (camera_position, camera) = if let Some((pos, cam)) = query
         .q0()
         .iter()
-        .filter(|(_, cam)| cam.name == Some("camera_3d".to_string()))
+        .filter(|(_, cam)| {
+            cam.name == Some(bevy::render::render_graph::base::camera::CAMERA_3D.to_string())
+        })
         .next()
     {
         (pos, cam)
