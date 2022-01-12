@@ -36,6 +36,7 @@ pub fn normalize(
     {
         pos
     } else {
+        error!("No 3d camera found");
         return;
     };
 
