@@ -54,6 +54,7 @@ pub fn normalize(
     {
         (pos, cam)
     } else {
+        error!("No camera found")
         return;
     };
     let camera_position = camera_position.to_owned();
