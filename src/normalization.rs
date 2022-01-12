@@ -23,16 +23,21 @@ pub struct Normalize3d;
 
 #[allow(clippy::type_complexity)]
 pub fn normalize(
-    camera_query: Query<&GlobalTransform, With<Camera>>,
+    camera_query: Query<(&GlobalTransform, &Camera)>,
     mut normalize_query: Query<&mut Transform, With<Normalize3d>>,
 ) {
     // TODO: can be improved by manually specifying the active camera to normalize against. The
     // majority of cases will only use a single camera for this viewer, so this is sufficient.
-    let camera_position = camera_query
+    let camera_position = if let Some((pos, cam)) = query
+        .q0()
         .iter()
-        .last()
-        .cloned()
-        .expect("No camera present in scene");
+        .filter(|(_, cam)| cam.name == Some("camera_3d".to_string()))
+        .next()
+    {
+        pos
+    } else {
+        return;
+    };
 
     for mut transform in normalize_query.iter_mut() {
         let distance = -camera_position
