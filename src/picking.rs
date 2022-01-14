@@ -10,7 +10,7 @@ pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<bevy_mod_raycast::PluginState<GizmoRaycastSet>>()
+        app.init_resource::<bevy_mod_raycast::DefaultPluginState<GizmoRaycastSet>>()
             .add_system_to_stage(
                 CoreStage::PreUpdate,
                 bevy_mod_raycast::build_rays::<GizmoRaycastSet>
@@ -45,7 +45,7 @@ pub struct GizmoRaycastSet;
 /// Update the gizmo's raycasting source with the current mouse position.
 fn update_gizmo_raycast_with_cursor(
     mut cursor: EventReader<CursorMoved>,
-    mut query: Query<&mut bevy_mod_raycast::RayCastSource<GizmoRaycastSet>>,
+    mut query: Query<&mut GizmoPickSource>,
 ) {
     for mut pick_source in &mut query.iter_mut() {
         // Grab the most recent cursor event if it exists:
@@ -58,8 +58,8 @@ fn update_gizmo_raycast_with_cursor(
 
 /// Disable the picking plugin when the mouse is over one of the gizmo handles.
 fn disable_mesh_picking_during_gizmo_hover(
-    mut picking_state: ResMut<bevy_mod_picking::PickingPluginState>,
-    query: Query<&bevy_mod_raycast::RayCastSource<GizmoRaycastSet>>,
+    mut picking_state: ResMut<bevy_mod_picking::PickingPluginsState>,
+    query: Query<&GizmoPickSource>,
     gizmo_query: Query<&TransformGizmo>,
 ) {
     let not_hovering_gizmo = if let Some(source) = query.iter().last() {
@@ -73,5 +73,5 @@ fn disable_mesh_picking_during_gizmo_hover(
         return;
     };
     // Set the picking state based on current user interaction state
-    picking_state.enabled = gizmo_inactive && not_hovering_gizmo;
+    picking_state.enable_picking = gizmo_inactive && not_hovering_gizmo;
 }
