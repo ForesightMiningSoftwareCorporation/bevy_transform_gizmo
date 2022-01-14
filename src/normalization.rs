@@ -19,20 +19,24 @@ impl Plugin for Ui3dNormalization {
 }
 
 /// Marker struct that marks entities with meshes that should be scaled relative to the camera.
+#[derive(Component, Debug)]
 pub struct Normalize3d;
 
 #[allow(clippy::type_complexity)]
 pub fn normalize(
-    camera_query: Query<&GlobalTransform, With<Camera>>,
+    camera_query: Query<(&GlobalTransform, &Camera)>,
     mut normalize_query: Query<&mut Transform, With<Normalize3d>>,
 ) {
     // TODO: can be improved by manually specifying the active camera to normalize against. The
     // majority of cases will only use a single camera for this viewer, so this is sufficient.
-    let camera_position = camera_query
-        .iter()
-        .last()
-        .cloned()
-        .expect("No camera present in scene");
+    let camera_position = if let Some((pos, _cam)) = camera_query.iter().find(|(_, cam)| {
+        cam.name == Some(bevy::render::camera::CameraPlugin::CAMERA_3D.to_string())
+    }) {
+        pos
+    } else {
+        error!("No 3d camera found");
+        return;
+    };
 
     for mut transform in normalize_query.iter_mut() {
         let distance = -camera_position
