@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_mod_raycast::DefaultRaycastingPlugin;
 
 use crate::TransformGizmo;
 
@@ -10,30 +11,14 @@ pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
 pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<bevy_mod_raycast::DefaultPluginState<GizmoRaycastSet>>()
+        app.add_plugin(DefaultRaycastingPlugin::<GizmoRaycastSet>::default())
             .add_system_to_stage(
                 CoreStage::PreUpdate,
-                bevy_mod_raycast::build_rays::<GizmoRaycastSet>
-                    .system()
-                    .label(bevy_mod_raycast::RaycastSystem::BuildRays),
-            )
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
-                    .system()
-                    .label(bevy_mod_raycast::RaycastSystem::UpdateRaycast)
-                    .after(bevy_mod_raycast::RaycastSystem::BuildRays),
-            )
-            .add_system_to_stage(
-                CoreStage::PreUpdate,
-                update_gizmo_raycast_with_cursor
-                    .system()
-                    .before(bevy_mod_raycast::RaycastSystem::BuildRays),
+                update_gizmo_raycast_with_cursor.before(bevy_mod_raycast::RaycastSystem::BuildRays),
             )
             .add_system_to_stage(
                 CoreStage::PreUpdate,
                 disable_mesh_picking_during_gizmo_hover
-                    .system()
                     .before(bevy_mod_picking::PickingSystem::Focus)
                     .after(bevy_mod_raycast::RaycastSystem::UpdateRaycast),
             );
@@ -62,16 +47,17 @@ fn disable_mesh_picking_during_gizmo_hover(
     query: Query<&GizmoPickSource>,
     gizmo_query: Query<&TransformGizmo>,
 ) {
-    let not_hovering_gizmo = if let Some(source) = query.iter().last() {
+    let not_hovering_gizmo = if let Ok(source) = query.get_single() {
         source.intersect_top().is_none()
     } else {
         true
     };
-    let gizmo_inactive = if let Some(gizmo) = gizmo_query.iter().last() {
+    let gizmo_inactive = if let Ok(gizmo) = gizmo_query.get_single() {
         gizmo.current_interaction().is_none()
     } else {
+        error!("Not exactly one gizmo.");
         return;
     };
     // Set the picking state based on current user interaction state
-    picking_state.enable_picking = gizmo_inactive && not_hovering_gizmo;
+    picking_state.enable_interacting = gizmo_inactive && not_hovering_gizmo;
 }

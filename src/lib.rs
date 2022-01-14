@@ -38,7 +38,6 @@ impl Plugin for TransformGizmoPlugin {
         app.add_event::<TransformGizmoEvent>()
             //.add_asset::<GizmoMaterial>()
             .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
-            .add_startup_system(mesh::build_gizmo.system())
             .add_plugin(picking::GizmoPickingPlugin)
             .add_plugin(normalization::Ui3dNormalization)
             .add_system_to_stage(
@@ -62,7 +61,8 @@ impl Plugin for TransformGizmoPlugin {
                     .label(TransformGizmoSystem::Place)
                     .after(TransformSystem::TransformPropagate)
                     .after(TransformGizmoSystem::Drag),
-            );
+            )
+            .add_startup_system(mesh::build_gizmo.system());
     }
 }
 
@@ -127,7 +127,6 @@ fn drag_gizmo(
         QueryState<&mut Transform, With<TransformGizmo>>,
     )>,
 ) {
-    let mut transform_query = transform_queries.q1();
     // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
     // should have no effect on the handle. We can do this by projecting the vector from the handle
     // click point to mouse's current position, onto the axis of the direction we are dragging. See
@@ -138,21 +137,25 @@ fn drag_gizmo(
         return;
     };
     let gizmo_origin = gizmo_global.translation;
-    let picking_camera = if let Some(cam) = pick_cam.iter().last() {
+    let picking_camera = if let Ok(cam) = pick_cam.get_single() {
         cam
     } else {
+        error!("Not exactly one picking camera.");
         return;
     };
     let picking_ray = if let Some(ray) = picking_camera.ray() {
         ray
     } else {
+        error!("Picking camera does not have a ray.");
+        return;
+    };
+    let gizmo_transform = if let Ok(transform) = transform_queries.q1().get_single() {
+        transform
+    } else {
+        error!("Not exactly one transform gizmo with a transform.");
         return;
     };
     if let Some(interaction) = gizmo.current_interaction {
-        let gizmo_transform = transform_query
-            .iter_mut()
-            .last()
-            .expect("Gizmo missing a `Transform` when there is some gizmo interaction.");
         let gizmo_initial = match &gizmo.initial_transform {
             Some(transform) => *transform,
             None => {
@@ -275,7 +278,6 @@ fn grab_gizmo(
                     if let Ok(gizmo_interaction) = hover_query.get(*child) {
                         gizmo.current_interaction = Some(*gizmo_interaction);
                         gizmo_clicked = true;
-                        //info!("Gizmo handle {:?} selected", gizmo_interaction);
                     }
                 }
             }
@@ -319,20 +321,16 @@ fn place_gizmo(
     selection_query: Query<(&Selection, &GlobalTransform), With<GizmoTransformable>>,
     mut gizmo_query: Query<(&mut Transform, &mut Visibility), With<TransformGizmo>>,
 ) {
-    // Maximum xyz position of all selected entities
-    let position = selection_query
+    let selected: Vec<_> = selection_query
         .iter()
         .filter(|(s, _t)| s.selected())
-        .map(|(_s, t)| t)
-        .fold(Vec3::splat(f32::MIN), |a, b| a.max(b.translation));
-    // Number of selected items
-    let selected_items = selection_query
-        .iter()
-        .filter(|(s, _t)| s.selected())
-        .count();
-    // Set the gizmo's position and visibility
+        .map(|(_s, t)| t.translation)
+        .collect();
+    let n_selected = selected.len();
+    let transform_sum = selected.iter().fold(Vec3::ZERO, |acc, t| acc + *t);
+    let centroid = transform_sum / n_selected as f32;
     if let Some((mut transform, mut visible)) = gizmo_query.iter_mut().last() {
-        transform.translation = position;
-        visible.is_visible = selected_items > 0;
+        transform.translation = centroid;
+        visible.is_visible = n_selected > 0;
     }
 }
