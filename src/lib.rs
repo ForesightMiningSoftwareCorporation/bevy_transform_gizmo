@@ -221,7 +221,7 @@ fn drag_gizmo(
     };
     if let Some(interaction) = gizmo.current_interaction {
         if gizmo.initial_transform.is_none() {
-            gizmo.initial_transform = Some(gizmo_transform.into());
+            gizmo.initial_transform = Some(gizmo_transform);
         }
         match interaction {
             TransformGizmoInteraction::TranslateAxis { original: _, axis } => {
