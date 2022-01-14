@@ -83,6 +83,14 @@ impl Material for GizmoMaterial {
         Some(asset_server.load("gizmo_material.wgsl"))
     }
 
+    fn vertex_shader(asset_server: &AssetServer) -> Option<Handle<Shader>> {
+        Some(asset_server.load("gizmo_material.wgsl"))
+    }
+
+    fn alpha_mode(_material: &<Self as RenderAsset>::PreparedAsset) -> AlphaMode {
+        AlphaMode::Blend
+    }
+
     fn bind_group(render_asset: &<Self as RenderAsset>::PreparedAsset) -> &BindGroup {
         &render_asset.bind_group
     }

@@ -36,13 +36,14 @@ pub fn build_gizmo(
     }));
     //let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
     // Define gizmo materials
-    let gizmo_material_x = materials.add(GizmoMaterial::from(Color::rgb(1.0, 0.4, 0.4)));
-    let gizmo_material_y = materials.add(GizmoMaterial::from(Color::rgb(0.4, 1.0, 0.4)));
-    let gizmo_material_z = materials.add(GizmoMaterial::from(Color::rgb(0.4, 0.5, 1.0)));
-    let gizmo_material_x_selectable = materials.add(GizmoMaterial::from(Color::rgb(1.0, 0.7, 0.7)));
-    let gizmo_material_y_selectable = materials.add(GizmoMaterial::from(Color::rgb(0.7, 1.0, 0.7)));
-    let gizmo_material_z_selectable = materials.add(GizmoMaterial::from(Color::rgb(0.7, 0.7, 1.0)));
-    /*let gizmo_material_origin = materials.add(StandardMaterial {
+    let alpha = 0.4;
+    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::rgba(1.0, 0.4, 0.4, alpha)));
+    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::rgba(0.4, 1.0, 0.4, alpha)));
+    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::rgba(0.4, 0.5, 1.0, alpha)));
+    let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::rgba(1.0, 0.7, 0.7, alpha)));
+    let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::rgba(0.7, 1.0, 0.7, alpha)));
+    let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::rgba(0.7, 0.7, 1.0, alpha)));
+    /*let gizmo_matl_origin = materials.add(StandardMaterial {
         unlit: true,
         base_color: Color::rgb(0.7, 0.7, 0.7),
         ..Default::default()
@@ -54,7 +55,7 @@ pub fn build_gizmo(
             // Translation Axes
             parent.spawn_bundle(MaterialMeshBundle {
                 mesh: arrow_tail_mesh.clone(),
-                material: gizmo_material_x.clone(),
+                material: gizmo_matl_x.clone(),
                 transform: Transform::from_matrix(Mat4::from_rotation_translation(
                     Quat::from_rotation_z(std::f32::consts::PI / 2.0),
                     Vec3::new(axis_length / 2.0, 0.0, 0.0),
@@ -63,7 +64,7 @@ pub fn build_gizmo(
             });
             parent.spawn_bundle(MaterialMeshBundle {
                 mesh: arrow_tail_mesh.clone(),
-                material: gizmo_material_y.clone(),
+                material: gizmo_matl_y.clone(),
                 transform: Transform::from_matrix(Mat4::from_rotation_translation(
                     Quat::from_rotation_y(std::f32::consts::PI / 2.0),
                     Vec3::new(0.0, axis_length / 2.0, 0.0),
@@ -72,7 +73,7 @@ pub fn build_gizmo(
             });
             parent.spawn_bundle(MaterialMeshBundle {
                 mesh: arrow_tail_mesh,
-                material: gizmo_material_z.clone(),
+                material: gizmo_matl_z.clone(),
                 transform: Transform::from_matrix(Mat4::from_rotation_translation(
                     Quat::from_rotation_x(std::f32::consts::PI / 2.0),
                     Vec3::new(0.0, 0.0, axis_length / 2.0),
@@ -84,7 +85,7 @@ pub fn build_gizmo(
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
-                    material: gizmo_material_x_selectable.clone(),
+                    material: gizmo_matl_x_sel.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
                         Quat::from_rotation_z(std::f32::consts::PI / -2.0),
                         Vec3::new(axis_length, 0.0, 0.0),
@@ -96,7 +97,7 @@ pub fn build_gizmo(
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
-                    material: gizmo_material_y_selectable.clone(),
+                    material: gizmo_matl_y_sel.clone(),
                     transform: Transform::from_translation(Vec3::new(0.0, axis_length, 0.0)),
                     ..Default::default()
                 })
@@ -105,7 +106,7 @@ pub fn build_gizmo(
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
-                    material: gizmo_material_z_selectable.clone(),
+                    material: gizmo_matl_z_sel.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
                         Quat::from_rotation_x(std::f32::consts::PI / 2.0),
                         Vec3::new(0.0, 0.0, axis_length),
@@ -119,7 +120,7 @@ pub fn build_gizmo(
                         parent
                             .spawn_bundle(MaterialMeshBundle {
                                 mesh: sphere_mesh.clone(),
-                                material: gizmo_material_origin,
+                                material: gizmo_matl_origin,
                                 ..Default::default()
                             })
                             .insert(PickableGizmo::default())
@@ -128,7 +129,7 @@ pub fn build_gizmo(
             // Rotation Arcs
             parent.spawn_bundle(MaterialMeshBundle {
                 mesh: rotation_mesh.clone(),
-                material: gizmo_material_x.clone(),
+                material: gizmo_matl_x.clone(),
                 transform: Transform::from_rotation(Quat::from_axis_angle(
                     Vec3::Z,
                     f32::to_radians(90.0),
@@ -137,12 +138,12 @@ pub fn build_gizmo(
             });
             parent.spawn_bundle(MaterialMeshBundle {
                 mesh: rotation_mesh.clone(),
-                material: gizmo_material_y.clone(),
+                material: gizmo_matl_y.clone(),
                 ..Default::default()
             });
             parent.spawn_bundle(MaterialMeshBundle {
                 mesh: rotation_mesh.clone(),
-                material: gizmo_material_z.clone(),
+                material: gizmo_matl_z.clone(),
                 transform: Transform::from_rotation(
                     Quat::from_axis_angle(Vec3::Z, f32::to_radians(90.0))
                         * Quat::from_axis_angle(Vec3::X, f32::to_radians(90.0)),
@@ -154,7 +155,7 @@ pub fn build_gizmo(
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
-                    material: gizmo_material_x_selectable.clone(),
+                    material: gizmo_matl_x_sel.clone(),
                     transform: Transform::from_translation(Vec3::new(
                         0.0,
                         f32::to_radians(45.0).sin() * arc_radius,
@@ -167,7 +168,7 @@ pub fn build_gizmo(
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
-                    material: gizmo_material_y_selectable.clone(),
+                    material: gizmo_matl_y_sel.clone(),
                     transform: Transform::from_translation(Vec3::new(
                         f32::to_radians(45.0).sin() * arc_radius,
                         0.0,
@@ -180,7 +181,7 @@ pub fn build_gizmo(
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
-                    material: gizmo_material_z_selectable.clone(),
+                    material: gizmo_matl_z_sel.clone(),
                     transform: Transform::from_translation(Vec3::new(
                         f32::to_radians(45.0).sin() * arc_radius,
                         f32::to_radians(45.0).sin() * arc_radius,
@@ -195,7 +196,7 @@ pub fn build_gizmo(
                         parent
                             .spawn_bundle(MaterialMeshBundle {
                                 mesh: cube_mesh.clone(),
-                                material: gizmo_material_x_selectable.clone(),
+                                material: gizmo_matl_x_sel.clone(),
                                 transform: Transform::from_translation(Vec3::new(arc_radius, 0.0, 0.0)),
                                 ..Default::default()
                             })
@@ -204,7 +205,7 @@ pub fn build_gizmo(
                         parent
                             .spawn_bundle(MaterialMeshBundle {
                                 mesh: cube_mesh.clone(),
-                                material: gizmo_material_y_selectable.clone(),
+                                material: gizmo_matl_y_sel.clone(),
                                 transform: Transform::from_translation(Vec3::new(0.0, arc_radius, 0.0)),
                                 ..Default::default()
                             })
@@ -213,7 +214,7 @@ pub fn build_gizmo(
                         parent
                             .spawn_bundle(MaterialMeshBundle {
                                 mesh: cube_mesh.clone(),
-                                material: gizmo_material_z_selectable.clone(),
+                                material: gizmo_matl_z_sel.clone(),
                                 transform: Transform::from_translation(Vec3::new(0.0, 0.0, arc_radius)),
                                 ..Default::default()
                             })
