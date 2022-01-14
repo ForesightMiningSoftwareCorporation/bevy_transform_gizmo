@@ -10,7 +10,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(bevy_mod_picking::DefaultPickingPlugins)
         .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin::new(
-            Quat::from_rotation_x(0.5), // Align the gizmo to a different coordinate system.
+            Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
         )) // Use TransformGizmoPlugin::default() to align to the scene's coordinate system.
         .add_startup_system(setup)
         .run();
