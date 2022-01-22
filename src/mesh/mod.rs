@@ -12,37 +12,36 @@ pub fn build_gizmo(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<GizmoMaterial>>,
 ) {
-    let axis_length = 1.5;
-    let arc_radius = 1.1;
+    let axis_length = 1.0;
+    let arc_radius = 0.8;
     // Define gizmo meshes
     let arrow_tail_mesh = meshes.add(Mesh::from(shape::Capsule {
-        radius: 0.015,
+        radius: 0.02,
         depth: axis_length,
         ..Default::default()
     }));
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
-        height: 0.3,
-        radius: 0.12,
+        height: 0.2,
+        radius: 0.09,
         ..Default::default()
     }));
     let sphere_mesh = meshes.add(Mesh::from(shape::Icosphere {
-        radius: 0.12,
+        radius: 0.1,
         subdivisions: 3,
     }));
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
-        ring_radius: 0.015,
+        ring_radius: 0.02,
         ..Default::default()
     }));
     //let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
     // Define gizmo materials
-    let alpha = 0.4;
-    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::rgba(1.0, 0.4, 0.4, alpha)));
-    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::rgba(0.4, 1.0, 0.4, alpha)));
-    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::rgba(0.4, 0.5, 1.0, alpha)));
-    let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::rgba(1.0, 0.7, 0.7, alpha)));
-    let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::rgba(0.7, 1.0, 0.7, alpha)));
-    let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::rgba(0.7, 0.7, 1.0, alpha)));
+    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::hsla(0.0, 0.8, 0.6, 0.4)));
+    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::hsla(120.0, 0.8, 0.6, 0.4)));
+    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::hsla(240.0, 0.8, 0.6, 0.4)));
+    let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::hsla(0.0, 0.8, 0.6, 1.0)));
+    let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::hsla(120.0, 0.8, 0.6, 1.0)));
+    let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::hsla(240.0, 0.8, 0.6, 1.0)));
     /*let gizmo_matl_origin = materials.add(StandardMaterial {
         unlit: true,
         base_color: Color::rgb(0.7, 0.7, 0.7),
