@@ -8,7 +8,10 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.6", default-features = false, features = ["render"] }
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
+    "render",
+] }
+#bevy = { version = "0.6", default-features = false, features = ["render"] }
 bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "master" }
 bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast", branch = "master" }
 
@@ -17,7 +20,8 @@ features = ["wgsl-in", "spv-out", "wgsl-out"]
 version = "*"
 
 [dev-dependencies]
-bevy = { version = "0.6", default-features = false, features = [
+#bevy = { version = "0.6", default-features = false, features = [
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
     "bevy_winit",
     "x11",
 ] }
