@@ -79,12 +79,12 @@ impl RenderAsset for GizmoMaterial {
 }
 
 impl Material for GizmoMaterial {
-    fn fragment_shader(asset_server: &AssetServer) -> Option<Handle<Shader>> {
-        Some(asset_server.load("gizmo_material.wgsl"))
+    fn fragment_shader(_asset_server: &AssetServer) -> Option<Handle<Shader>> {
+        Some(GIZMO_SHADER_HANDLE.typed())
     }
 
-    fn vertex_shader(asset_server: &AssetServer) -> Option<Handle<Shader>> {
-        Some(asset_server.load("gizmo_material.wgsl"))
+    fn vertex_shader(_asset_server: &AssetServer) -> Option<Handle<Shader>> {
+        Some(GIZMO_SHADER_HANDLE.typed())
     }
 
     fn alpha_mode(_material: &<Self as RenderAsset>::PreparedAsset) -> AlphaMode {
