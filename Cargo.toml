@@ -20,7 +20,7 @@ bevy_mod_raycast = "0.3"
 
 [dependencies.naga]
 features = ["wgsl-in", "spv-out", "wgsl-out"]
-version = "*"
+version = "0.8"
 
 [dev-dependencies]
 bevy = { version = "0.6", default-features = false, features = [
