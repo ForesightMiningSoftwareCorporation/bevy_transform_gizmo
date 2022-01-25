@@ -36,12 +36,13 @@ pub fn build_gizmo(
     }));
     //let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
     // Define gizmo materials
-    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::hsla(0.0, 0.8, 0.6, 0.4)));
-    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::hsla(120.0, 0.8, 0.6, 0.4)));
-    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::hsla(240.0, 0.8, 0.6, 0.4)));
-    let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::hsla(0.0, 0.8, 0.6, 1.0)));
-    let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::hsla(120.0, 0.8, 0.6, 1.0)));
-    let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::hsla(240.0, 0.8, 0.6, 1.0)));
+    let (s, l, a) = (0.8, 0.6, 0.8);
+    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::hsla(0.0, s, l, a)));
+    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::hsla(120.0, s, l, a)));
+    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::hsla(240.0, s, l, a)));
+    let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::hsla(0.0, s, l, 1.0)));
+    let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::hsla(120.0, s, l, 1.0)));
+    let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::hsla(240.0, s, l, 1.0)));
     /*let gizmo_matl_origin = materials.add(StandardMaterial {
         unlit: true,
         base_color: Color::rgb(0.7, 0.7, 0.7),
