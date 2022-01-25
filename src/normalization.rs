@@ -60,7 +60,7 @@ pub fn normalize(
     for (mut transform, mut global_transform, normalize) in query.q1().iter_mut() {
         let distance = view.transform_point3(global_transform.translation).z;
 
-        let pixel_end = if let Some(coords) = world_to_screen(
+        let pixel_end = if let Some(coords) = Camera::world_to_screen(
             &camera,
             &windows,
             &GlobalTransform::default(),
@@ -74,7 +74,7 @@ pub fn normalize(
         } else {
             break;
         };
-        let pixel_root = if let Some(coords) = world_to_screen(
+        let pixel_root = if let Some(coords) = Camera::world_to_screen(
             &camera,
             &windows,
             &GlobalTransform::default(),
@@ -89,24 +89,4 @@ pub fn normalize(
         global_transform.scale *= Vec3::splat(required_scale);
         transform.scale = global_transform.scale;
     }
-}
-
-pub fn world_to_screen(
-    camera: &Camera,
-    windows: &Windows,
-    camera_transform: &GlobalTransform,
-    world_position: Vec3,
-) -> Option<Vec2> {
-    let window = windows.get(camera.window)?;
-    let window_size = Vec2::new(window.width(), window.height());
-    // Build a transform to convert from world to NDC using camera data
-    let world_to_ndc: Mat4 = camera.projection_matrix * camera_transform.compute_matrix().inverse();
-    let ndc_space_coords: Vec3 = world_to_ndc.project_point3(world_position);
-    // NDC z-values outside of 0 < z < 1 are behind the camera and are thus not in screen space
-    if ndc_space_coords.z < 0.0 || ndc_space_coords.z > 1.0 || ndc_space_coords.z.is_nan() {
-        return None;
-    }
-    // Once in NDC space, we can discard the z element and rescale x/y to fit the screen
-    let screen_space_coords = (ndc_space_coords.truncate() + Vec2::ONE) / 2.0 * window_size;
-    Some(screen_space_coords)
 }
