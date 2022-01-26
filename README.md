@@ -65,7 +65,7 @@ at your option. This means you can select the license you prefer! This dual-lice
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
 ## Sponsors
-The creation and maintenance of Bevy Polyline is sponsored by Foresight Mining Software Corporation.
+The creation and maintenance of Bevy Transform Gizmo is sponsored by Foresight Mining Software Corporation.
 
 <img src="https://user-images.githubusercontent.com/2632925/151242316-db3455d1-4934-4374-8369-1818daf512dd.png" alt="Foresight Mining Software Corporation" width="480">
 
