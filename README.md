@@ -63,3 +63,8 @@ bevy_transform_gizmo is free and open source! All code in this repository is dua
 at your option. This means you can select the license you prefer! This dual-licensing approach is the de-facto standard in the Rust ecosystem and there are very good reasons to include both.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+## Sponsors
+The creation and maintenance of Bevy Polyline is sponsored by Foresight Mining Software Corporation.
+
+<img src="fse.png" alt="Foresight Mining Software Corporation" width="480">
