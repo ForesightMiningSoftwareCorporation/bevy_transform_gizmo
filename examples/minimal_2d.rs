@@ -6,23 +6,25 @@ fn main() {
             vsync: false, // Disabled for this demo to remove vsync as a source of input latency
             ..Default::default()
         })
-        .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugins(bevy_mod_picking::DefaultPickingPlugins)
         .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin::new(
-            Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
-            bevy_transform_gizmo::GizmoAxisModeValue::XYZ,
-        )) // Use TransformGizmoPlugin::default() to align to the scene's coordinate system.
+            Quat::default(),
+            bevy_transform_gizmo::GizmoAxisModeValue::XY,
+        ))
         .add_startup_system(setup)
         .run();
 }
 
-/// set up a simple 3D scene
+/// set up a simple 2D scene
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    commands.insert_resource(bevy_transform_gizmo::GizmoAxisMode {
+        mode: bevy_transform_gizmo::GizmoAxisModeValue::XY,
+    });
     // plane
     commands
         .spawn_bundle(PbrBundle {

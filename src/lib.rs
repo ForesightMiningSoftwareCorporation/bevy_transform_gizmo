@@ -52,15 +52,35 @@ pub struct GizmoSettings {
     pub alignment_rotation: Quat,
 }
 
+#[derive(PartialEq, Clone, Copy)]
+pub enum GizmoAxisModeValue {
+    XYZ,
+    XY,
+}
+
+impl Default for GizmoAxisModeValue {
+    fn default() -> Self {
+        GizmoAxisModeValue::XYZ
+    }
+}
+
+pub struct GizmoAxisMode {
+    pub mode: GizmoAxisModeValue,
+}
+
 #[derive(Default)]
 pub struct TransformGizmoPlugin {
     // Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     // coordinate system.
     alignment_rotation: Quat,
+    axis_mode: GizmoAxisModeValue,
 }
 impl TransformGizmoPlugin {
-    pub fn new(alignment_rotation: Quat) -> Self {
-        TransformGizmoPlugin { alignment_rotation }
+    pub fn new(alignment_rotation: Quat, axis_mode: GizmoAxisModeValue) -> Self {
+        TransformGizmoPlugin {
+            alignment_rotation,
+            axis_mode,
+        }
     }
 }
 impl Plugin for TransformGizmoPlugin {
@@ -72,6 +92,9 @@ impl Plugin for TransformGizmoPlugin {
         );
         let alignment_rotation = self.alignment_rotation;
         app.insert_resource(GizmoSettings { alignment_rotation })
+            .insert_resource(GizmoAxisMode {
+                mode: self.axis_mode,
+            })
             .insert_resource(GizmoSystemsEnabled(true))
             .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
             .add_plugin(picking::GizmoPickingPlugin)
