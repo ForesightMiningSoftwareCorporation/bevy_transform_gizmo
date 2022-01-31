@@ -8,7 +8,7 @@ fn main() {
         })
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
-        .add_plugin(bevy_mod_picking::DefaultPickingPlugins)
+        .add_plugins(bevy_mod_picking::DefaultPickingPlugins)
         .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
         .add_startup_system(setup)
         .run();
