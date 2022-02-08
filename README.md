@@ -33,7 +33,7 @@ bevy_transform_gizmo = { git = "https://github.com/ForesightMiningSoftwareCorpor
 You will need to add the transform gizmo plugin, as well as make sure you have also brought in the picking plugin.
 
 ```rust
-.add_plugin(bevy_mod_picking::DefaultPickingPlugins)
+.add_plugins(bevy_mod_picking::DefaultPickingPlugins)
 .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
 ```
 
