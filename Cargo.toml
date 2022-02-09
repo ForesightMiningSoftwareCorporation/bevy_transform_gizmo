@@ -17,8 +17,8 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
     "render",
 ] }
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "master" }
-bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast", branch = "master" }
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "main" }
+bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast", branch = "main" }
 
 [dependencies.naga]
 features = ["wgsl-in", "spv-out", "wgsl-out"]
