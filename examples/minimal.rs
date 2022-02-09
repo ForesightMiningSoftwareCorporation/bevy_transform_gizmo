@@ -3,7 +3,7 @@ use bevy::prelude::*;
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
-            vsync: false, // Disabled for this demo to remove vsync as a source of input latency
+            present_mode: PresentMode::Immediate, // Remove vsync as a source of input latency
             ..Default::default()
         })
         .insert_resource(Msaa { samples: 4 })
