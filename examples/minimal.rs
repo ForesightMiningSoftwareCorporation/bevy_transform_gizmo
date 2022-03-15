@@ -1,9 +1,8 @@
-use bevy::{prelude::*, window::PresentMode};
+use bevy::prelude::*;
 
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
-            present_mode: PresentMode::Immediate, // Remove vsync as a source of input latency
             ..Default::default()
         })
         .insert_resource(Msaa { samples: 4 })
