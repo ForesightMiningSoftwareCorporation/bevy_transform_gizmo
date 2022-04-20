@@ -1,8 +1,17 @@
+<div align="center">
+    
 # Bevy Transform Gizmo
 
-This Bevy plugin adds a transform gizmo to entities in the scene, allowing you to drag and rotate meshes with your mouse.
-
+**Simple 3D transform gizmo for bevy**
+    
 https://user-images.githubusercontent.com/2632925/164319240-75101823-877f-4f05-a47b-2c1348cf16fd.mp4
+    
+[![crates.io](https://img.shields.io/crates/v/bevy_transform_gizmo)](https://crates.io/crates/bevy_transform_gizmo)
+[![docs.rs](https://docs.rs/bevy_transform_gizmo/badge.svg)](https://docs.rs/bevy_transform_gizmo)
+[![CI](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/workflows/CI/badge.svg?branch=main)](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/actions?query=workflow%3A%22CI%22+branch%3Amain)
+[![Bevy tracking](https://img.shields.io/badge/Bevy%20tracking-main-lightblue)](https://github.com/bevyengine/bevy/blob/main/docs/plugins_guidelines.md#main-branch-tracking)
+    
+</div>
 
 # Demo
 
