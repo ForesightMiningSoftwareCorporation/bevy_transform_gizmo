@@ -81,7 +81,6 @@ impl Plugin for TransformGizmoPlugin {
                 CoreStage::PreUpdate,
                 SystemSet::new()
                     .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
-                    .with_system(update_gizmo_alignment.label(TransformGizmoSystem::UpdateSettings))
                     .with_system(
                         hover_gizmo
                             .label(TransformGizmoSystem::Hover)
@@ -99,6 +98,7 @@ impl Plugin for TransformGizmoPlugin {
                 CoreStage::PostUpdate,
                 SystemSet::new()
                     .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
+                    .with_system(update_gizmo_alignment.label(TransformGizmoSystem::UpdateSettings))
                     .with_system(
                         drag_gizmo
                             .label(TransformGizmoSystem::Drag)

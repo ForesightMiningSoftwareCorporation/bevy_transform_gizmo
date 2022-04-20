@@ -2,7 +2,7 @@
 
 This Bevy plugin adds a transform gizmo to entities in the scene, allowing you to drag and rotate meshes with your mouse.
 
-https://user-images.githubusercontent.com/2632925/119217311-33ac8a00-ba8e-11eb-9dfb-db0b9c13cd84.mp4
+https://user-images.githubusercontent.com/2632925/164319240-75101823-877f-4f05-a47b-2c1348cf16fd.mp4
 
 # Demo
 
@@ -18,7 +18,7 @@ cargo run --example minimal
 * Translation handles
 * Rotation handles
 * Gizmo always renders on top of the main render pass
-* Gizmo scales at it moves closer/further from the camera
+* Gizmo is always the same size at it moves closer/further from the camera
 
 # Usage
 
@@ -33,7 +33,7 @@ bevy_transform_gizmo = { git = "https://github.com/ForesightMiningSoftwareCorpor
 You will need to add the transform gizmo plugin, as well as make sure you have also brought in the picking plugin.
 
 ```rust
-.add_plugin(bevy_mod_picking::DefaultPickingPlugins)
+.add_plugins(bevy_mod_picking::DefaultPickingPlugins)
 .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
 ```
 
@@ -63,3 +63,9 @@ bevy_transform_gizmo is free and open source! All code in this repository is dua
 at your option. This means you can select the license you prefer! This dual-licensing approach is the de-facto standard in the Rust ecosystem and there are very good reasons to include both.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+## Sponsors
+The creation and maintenance of Bevy Transform Gizmo is sponsored by Foresight Mining Software Corporation.
+
+<img src="https://user-images.githubusercontent.com/2632925/151242316-db3455d1-4934-4374-8369-1818daf512dd.png" alt="Foresight Mining Software Corporation" width="480">
+
