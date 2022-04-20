@@ -2,7 +2,7 @@
 
 This Bevy plugin adds a transform gizmo to entities in the scene, allowing you to drag and rotate meshes with your mouse.
 
-https://user-images.githubusercontent.com/2632925/119217311-33ac8a00-ba8e-11eb-9dfb-db0b9c13cd84.mp4
+https://user-images.githubusercontent.com/2632925/164319240-75101823-877f-4f05-a47b-2c1348cf16fd.mp4
 
 # Demo
 
@@ -18,7 +18,7 @@ cargo run --example minimal
 * Translation handles
 * Rotation handles
 * Gizmo always renders on top of the main render pass
-* Gizmo scales at it moves closer/further from the camera
+* Gizmo is always the same size at it moves closer/further from the camera
 
 # Usage
 
