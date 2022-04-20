@@ -178,9 +178,9 @@ struct InitialTransform {
 fn drag_gizmo(
     pick_cam: Query<&PickingCamera>,
     mut gizmo_mut: Query<&mut TransformGizmo>,
-    mut transform_queries: QuerySet<(
-        QueryState<(&Selection, &mut Transform, &InitialTransform)>,
-        QueryState<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
+    mut transform_queries: ParamSet<(
+        Query<(&Selection, &mut Transform, &InitialTransform)>,
+        Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
     )>,
 ) {
     let picking_camera = if let Some(cam) = pick_cam.iter().last() {
@@ -200,7 +200,7 @@ fn drag_gizmo(
     // click point to mouse's current position, onto the axis of the direction we are dragging. See
     // the wiki article for details: https://en.wikipedia.org/wiki/Vector_projection
     let gizmo_transform =
-        if let Ok((transform, &Interaction::Clicked)) = transform_queries.q1().get_single() {
+        if let Ok((transform, &Interaction::Clicked)) = transform_queries.p1().get_single() {
             transform.to_owned()
         } else {
             return;
@@ -254,7 +254,7 @@ fn drag_gizmo(
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
                 transform_queries
-                    .q0()
+                    .p0()
                     .iter_mut()
                     .filter(|(s, _t, _i)| s.selected())
                     .for_each(|(_s, mut t, i)| {
@@ -291,7 +291,7 @@ fn drag_gizmo(
                 let angle = det.atan2(dot);
                 let rotation = Quat::from_axis_angle(axis, angle);
                 transform_queries
-                    .q0()
+                    .p0()
                     .iter_mut()
                     .filter(|(s, _t, _i)| s.selected())
                     .for_each(|(_s, mut t, i)| {
@@ -390,13 +390,13 @@ fn grab_gizmo(
 #[allow(clippy::type_complexity)]
 fn place_gizmo(
     plugin_settings: Res<GizmoSettings>,
-    mut queries: QuerySet<(
-        QueryState<(&Selection, &GlobalTransform), With<GizmoTransformable>>,
-        QueryState<(&mut GlobalTransform, &mut Transform, &mut Visibility), With<TransformGizmo>>,
+    mut queries: ParamSet<(
+        Query<(&Selection, &GlobalTransform), With<GizmoTransformable>>,
+        Query<(&mut GlobalTransform, &mut Transform, &mut Visibility), With<TransformGizmo>>,
     )>,
 ) {
     let selected: Vec<_> = queries
-        .q0()
+        .p0()
         .iter()
         .filter(|(s, _t)| s.selected())
         .map(|(_s, t)| t.translation)
@@ -405,7 +405,7 @@ fn place_gizmo(
     let transform_sum = selected.iter().fold(Vec3::ZERO, |acc, t| acc + *t);
     let centroid = transform_sum / n_selected as f32;
     // Set the gizmo's position and visibility
-    if let Ok((mut g_transform, mut transform, mut visible)) = queries.q1().get_single_mut() {
+    if let Ok((mut g_transform, mut transform, mut visible)) = queries.p1().get_single_mut() {
         g_transform.translation = centroid;
         g_transform.rotation = plugin_settings.alignment_rotation;
         transform.translation = g_transform.translation;

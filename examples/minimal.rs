@@ -1,9 +1,9 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PresentMode::Mailbox};
 
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
-            vsync: false, // Disabled for this demo to remove vsync as a source of input latency
+            present_mode: Mailbox,
             ..Default::default()
         })
         .insert_resource(Msaa { samples: 4 })

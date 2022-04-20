@@ -1,11 +1,7 @@
-use bevy::{prelude::*, render::camera::Camera, transform::TransformSystem};
+use bevy::{prelude::*, render::camera::Camera, transform::transform_propagate_system};
+use bevy_mod_picking::PickingCamera;
 
-use crate::{GizmoSystemsEnabledCriteria, TransformGizmoSystem};
-
-#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
-pub enum FseNormalizeSystem {
-    Normalize,
-}
+use crate::GizmoSystemsEnabledCriteria;
 
 pub struct Ui3dNormalization;
 impl Plugin for Ui3dNormalization {
@@ -13,10 +9,9 @@ impl Plugin for Ui3dNormalization {
         app.add_system_to_stage(
             CoreStage::PostUpdate,
             normalize
-                .label(FseNormalizeSystem::Normalize)
                 .with_run_criteria(GizmoSystemsEnabledCriteria)
-                .after(TransformSystem::TransformPropagate)
-                .after(TransformGizmoSystem::Place),
+                .after(transform_propagate_system)
+                .after(crate::place_gizmo),
         );
     }
 }
@@ -41,28 +36,29 @@ impl Normalize3d {
 #[allow(clippy::type_complexity)]
 pub fn normalize(
     windows: Res<Windows>,
-    mut query: QuerySet<(
-        QueryState<(&GlobalTransform, &Camera)>,
-        QueryState<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
+    images: Res<Assets<Image>>,
+    mut query: ParamSet<(
+        Query<(&GlobalTransform, &Camera), With<PickingCamera>>,
+        Query<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
     )>,
 ) {
     // TODO: can be improved by manually specifying the active camera to normalize against. The
     // majority of cases will only use a single camera for this viewer, so this is sufficient.
-    let (camera_position, camera) = query.q0().get_single().expect("Not exactly one camera");
-    let camera_position = camera_position.to_owned();
-    let view = camera_position.compute_matrix().inverse();
-    let camera = Camera {
-        window: camera.window,
-        projection_matrix: camera.projection_matrix,
-        ..Default::default()
+    let (camera_position, camera) = if let Ok((camera_position, camera)) = query.p0().get_single() {
+        (camera_position.to_owned(), camera.to_owned())
+    } else {
+        error!("More than one picking camera");
+        return;
     };
+    let view = camera_position.compute_matrix().inverse();
 
-    for (mut transform, mut global_transform, normalize) in query.q1().iter_mut() {
+    for (mut transform, mut global_transform, normalize) in query.p1().iter_mut() {
         let distance = view.transform_point3(global_transform.translation).z;
 
         let pixel_end = if let Some(coords) = Camera::world_to_screen(
             &camera,
             &windows,
+            &images,
             &GlobalTransform::default(),
             Vec3::new(
                 normalize.size_in_world * global_transform.scale.x,
@@ -77,6 +73,7 @@ pub fn normalize(
         let pixel_root = if let Some(coords) = Camera::world_to_screen(
             &camera,
             &windows,
+            &images,
             &GlobalTransform::default(),
             Vec3::new(0.0, 0.0, distance),
         ) {
