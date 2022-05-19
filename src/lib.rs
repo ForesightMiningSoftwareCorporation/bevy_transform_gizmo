@@ -4,7 +4,7 @@ use bevy_mod_picking::{
 };
 use bevy_mod_raycast::RaycastSystem;
 use gizmo_material::GizmoMaterial;
-use mesh::ViewTranslateGizmo;
+use mesh::{RotationGizmo, ViewTranslateGizmo};
 use normalization::*;
 
 mod gizmo_material;
@@ -52,6 +52,7 @@ pub struct GizmoSettings {
     /// Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     /// coordinate system.
     pub alignment_rotation: Quat,
+    pub allow_rotation: bool,
 }
 
 #[derive(Default)]
@@ -73,53 +74,56 @@ impl Plugin for TransformGizmoPlugin {
             Shader::from_wgsl(include_str!("../assets/gizmo_material.wgsl")),
         );
         let alignment_rotation = self.alignment_rotation;
-        app.insert_resource(GizmoSettings { alignment_rotation })
-            .insert_resource(GizmoSystemsEnabled(true))
-            .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
-            .add_plugin(picking::GizmoPickingPlugin)
-            .add_event::<TransformGizmoEvent>()
-            .add_plugin(Ui3dNormalization)
-            .add_system_set_to_stage(
-                CoreStage::PreUpdate,
-                SystemSet::new()
-                    .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
-                    .with_system(
-                        hover_gizmo
-                            .label(TransformGizmoSystem::Hover)
-                            .after(TransformGizmoSystem::UpdateSettings)
-                            .after(RaycastSystem::UpdateRaycast),
-                    )
-                    .with_system(
-                        grab_gizmo
-                            .label(TransformGizmoSystem::Grab)
-                            .after(TransformGizmoSystem::Hover)
-                            .before(PickingSystem::PauseForBlockers),
-                    ),
-            )
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new()
-                    .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
-                    .with_system(update_gizmo_alignment.label(TransformGizmoSystem::UpdateSettings))
-                    .with_system(
-                        adjust_view_translate_gizmo
-                            .label(TransformGizmoSystem::AdjustViewTranslateGizmo)
-                            .before(TransformGizmoSystem::Drag),
-                    )
-                    .with_system(
-                        drag_gizmo
-                            .label(TransformGizmoSystem::Drag)
-                            .before(TransformSystem::TransformPropagate),
-                    )
-                    .with_system(
-                        place_gizmo
-                            .label(TransformGizmoSystem::Place)
-                            .after(TransformSystem::TransformPropagate)
-                            .after(TransformGizmoSystem::Drag),
-                    ),
-            )
-            .add_startup_system(mesh::build_gizmo)
-            .add_startup_system_to_stage(StartupStage::PostStartup, place_gizmo);
+        app.insert_resource(GizmoSettings {
+            alignment_rotation,
+            allow_rotation: true,
+        })
+        .insert_resource(GizmoSystemsEnabled(true))
+        .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
+        .add_plugin(picking::GizmoPickingPlugin)
+        .add_event::<TransformGizmoEvent>()
+        .add_plugin(Ui3dNormalization)
+        .add_system_set_to_stage(
+            CoreStage::PreUpdate,
+            SystemSet::new()
+                .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
+                .with_system(
+                    hover_gizmo
+                        .label(TransformGizmoSystem::Hover)
+                        .after(TransformGizmoSystem::UpdateSettings)
+                        .after(RaycastSystem::UpdateRaycast),
+                )
+                .with_system(
+                    grab_gizmo
+                        .label(TransformGizmoSystem::Grab)
+                        .after(TransformGizmoSystem::Hover)
+                        .before(PickingSystem::PauseForBlockers),
+                ),
+        )
+        .add_system_set_to_stage(
+            CoreStage::PostUpdate,
+            SystemSet::new()
+                .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
+                .with_system(update_gizmo_settings.label(TransformGizmoSystem::UpdateSettings))
+                .with_system(
+                    adjust_view_translate_gizmo
+                        .label(TransformGizmoSystem::AdjustViewTranslateGizmo)
+                        .before(TransformGizmoSystem::Drag),
+                )
+                .with_system(
+                    drag_gizmo
+                        .label(TransformGizmoSystem::Drag)
+                        .before(TransformSystem::TransformPropagate),
+                )
+                .with_system(
+                    place_gizmo
+                        .label(TransformGizmoSystem::Place)
+                        .after(TransformSystem::TransformPropagate)
+                        .after(TransformGizmoSystem::Drag),
+                ),
+        )
+        .add_startup_system(mesh::build_gizmo)
+        .add_startup_system_to_stage(StartupStage::PostStartup, place_gizmo);
     }
 }
 
@@ -453,13 +457,16 @@ fn place_gizmo(
     }
 }
 
-/// Updates the gizmo axes rotation based on the gizmo settings
-fn update_gizmo_alignment(
+fn update_gizmo_settings(
     plugin_settings: Res<GizmoSettings>,
-    mut query: Query<&mut TransformGizmoInteraction>,
+    mut interactions: Query<&mut TransformGizmoInteraction>,
+    mut rotations: Query<&mut Visibility, With<RotationGizmo>>,
 ) {
+    if !plugin_settings.is_changed() {
+        return;
+    }
     let rotation = plugin_settings.alignment_rotation;
-    for mut interaction in query.iter_mut() {
+    for mut interaction in interactions.iter_mut() {
         if let Some(rotated_interaction) = match *interaction {
             TransformGizmoInteraction::TranslateAxis { original, axis: _ } => {
                 Some(TransformGizmoInteraction::TranslateAxis {
@@ -483,6 +490,10 @@ fn update_gizmo_alignment(
         } {
             *interaction = rotated_interaction;
         }
+    }
+
+    for mut visibility in rotations.iter_mut() {
+        visibility.is_visible = plugin_settings.allow_rotation;
     }
 }
 

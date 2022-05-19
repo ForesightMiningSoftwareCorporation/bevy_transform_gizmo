@@ -1,4 +1,5 @@
 use bevy::{prelude::*, window::PresentMode::Mailbox};
+use bevy_transform_gizmo::GizmoSettings;
 
 fn main() {
     App::new()
@@ -9,9 +10,11 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugins(bevy_mod_picking::DefaultPickingPlugins)
-        .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin::new(
-            Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
-        )) // Use TransformGizmoPlugin::default() to align to the scene's coordinate system.
+        .add_plugin(bevy_transform_gizmo::TransformGizmoPlugin::default())
+        .insert_resource(GizmoSettings {
+            alignment_rotation: Default::default(),
+            allow_rotation: false,
+        })
         .add_startup_system(setup)
         .run();
 }
