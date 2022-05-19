@@ -474,6 +474,13 @@ fn update_gizmo_settings(
                     axis: rotation.mul_vec3(original),
                 })
             }
+            TransformGizmoInteraction::TranslatePlane {
+                original,
+                normal: _,
+            } => Some(TransformGizmoInteraction::TranslatePlane {
+                original,
+                normal: rotation.mul_vec3(original),
+            }),
             TransformGizmoInteraction::RotateAxis { original, axis: _ } => {
                 Some(TransformGizmoInteraction::RotateAxis {
                     original,
