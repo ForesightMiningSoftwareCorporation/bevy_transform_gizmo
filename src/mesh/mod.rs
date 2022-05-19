@@ -6,6 +6,9 @@ use bevy::prelude::*;
 mod cone;
 mod truncated_torus;
 
+#[derive(Component)]
+pub struct ViewTranslateGizmo;
+
 /// Startup system that builds the procedural mesh and materials of the gizmo.
 pub fn build_gizmo(
     mut commands: Commands,
@@ -49,6 +52,7 @@ pub fn build_gizmo(
     let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::hsl(0.0, s, l)));
     let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::hsl(120.0, s, l)));
     let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::hsl(240.0, s, l)));
+    let gizmo_matl_v_sel = materials.add(GizmoMaterial::from(Color::hsl(0., 0.0, l)));
     /*let gizmo_matl_origin = materials.add(StandardMaterial {
         unlit: true,
         base_color: Color::rgb(0.7, 0.7, 0.7),
@@ -176,6 +180,19 @@ pub fn build_gizmo(
                     original: Vec3::Z,
                     normal: Vec3::Z,
                 });
+
+            parent
+                .spawn_bundle(MaterialMeshBundle {
+                    mesh: plane_mesh.clone(),
+                    material: gizmo_matl_v_sel.clone(),
+                    ..Default::default()
+                })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::TranslatePlane {
+                    original: Vec3::ZERO,
+                    normal: Vec3::Z,
+                })
+                .insert(ViewTranslateGizmo);
 
             // Rotation Arcs
             parent.spawn_bundle(MaterialMeshBundle {

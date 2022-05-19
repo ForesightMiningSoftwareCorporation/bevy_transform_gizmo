@@ -4,6 +4,7 @@ use bevy_mod_picking::{
 };
 use bevy_mod_raycast::RaycastSystem;
 use gizmo_material::GizmoMaterial;
+use mesh::ViewTranslateGizmo;
 use normalization::*;
 
 mod gizmo_material;
@@ -30,6 +31,7 @@ fn plugin_enabled(enabled: Res<GizmoSystemsEnabled>) -> ShouldRun {
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum TransformGizmoSystem {
     UpdateSettings,
+    AdjustViewTranslateGizmo,
     Place,
     Hover,
     Grab,
@@ -99,6 +101,11 @@ impl Plugin for TransformGizmoPlugin {
                 SystemSet::new()
                     .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
                     .with_system(update_gizmo_alignment.label(TransformGizmoSystem::UpdateSettings))
+                    .with_system(
+                        adjust_view_translate_gizmo
+                            .label(TransformGizmoSystem::AdjustViewTranslateGizmo)
+                            .before(TransformGizmoSystem::Drag),
+                    )
                     .with_system(
                         drag_gizmo
                             .label(TransformGizmoSystem::Drag)
@@ -477,4 +484,34 @@ fn update_gizmo_alignment(
             *interaction = rotated_interaction;
         }
     }
+}
+
+fn adjust_view_translate_gizmo(
+    mut gizmo: Query<
+        (&mut Transform, &mut TransformGizmoInteraction),
+        (With<ViewTranslateGizmo>, Without<GizmoPickSource>),
+    >,
+    camera: Query<&Transform, With<GizmoPickSource>>,
+) {
+    let (mut transform, mut interaction) = match gizmo.get_single_mut() {
+        Ok(x) => x,
+        Err(_) => return,
+    };
+
+    let cam_transform = match camera.get_single() {
+        Ok(x) => x,
+        Err(_) => return,
+    };
+
+    let direction = (cam_transform.translation - transform.translation).normalize();
+    *interaction = TransformGizmoInteraction::TranslatePlane {
+        original: Vec3::ZERO,
+        normal: direction,
+    };
+
+    transform.look_at(
+        Quat::from_axis_angle(cam_transform.local_z(), std::f32::consts::PI * 0.25)
+            * cam_transform.local_y(),
+        direction,
+    );
 }
