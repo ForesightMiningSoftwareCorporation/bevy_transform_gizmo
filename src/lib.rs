@@ -163,7 +163,7 @@ impl TransformGizmo {
 #[derive(Clone, Copy, Debug, PartialEq, Component)]
 pub enum TransformGizmoInteraction {
     TranslateAxis { original: Vec3, axis: Vec3 },
-    TranslateOrigin,
+    TranslatePlane { original: Vec3, normal: Vec3 },
     RotateAxis { original: Vec3, axis: Vec3 },
     ScaleAxis { original: Vec3, axis: Vec3 },
 }
@@ -265,7 +265,37 @@ fn drag_gizmo(
                         }
                     });
             }
-            TransformGizmoInteraction::TranslateOrigin => (),
+            TransformGizmoInteraction::TranslatePlane { normal, .. } => {
+                let plane_origin = gizmo_origin;
+                let cursor_plane_intersection = if let Some(intersection) = picking_camera
+                    .intersect_primitive(Primitive3d::Plane {
+                        normal,
+                        point: plane_origin,
+                    }) {
+                    intersection.position()
+                } else {
+                    return;
+                };
+                let drag_start = match gizmo.drag_start {
+                    Some(drag_start) => drag_start,
+                    None => {
+                        gizmo.drag_start = Some(cursor_plane_intersection);
+                        return;
+                    }
+                };
+                transform_queries
+                    .p0()
+                    .iter_mut()
+                    .filter(|(s, _t, _i)| s.selected())
+                    .for_each(|(_s, mut t, i)| {
+                        *t = Transform {
+                            translation: i.transform.translation + cursor_plane_intersection
+                                - drag_start,
+                            rotation: i.transform.rotation,
+                            scale: i.transform.scale,
+                        }
+                    });
+            }
             TransformGizmoInteraction::RotateAxis { original: _, axis } => {
                 let rotation_plane = Primitive3d::Plane {
                     normal: axis.normalize(),

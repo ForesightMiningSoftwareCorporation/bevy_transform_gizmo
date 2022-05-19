@@ -14,6 +14,8 @@ pub fn build_gizmo(
 ) {
     let axis_length = 1.0;
     let arc_radius = 0.8;
+    let plane_size = axis_length * 0.3;
+    let plane_offset = plane_size / 2. + axis_length * 0.2;
     // Define gizmo meshes
     let arrow_tail_mesh = meshes.add(Mesh::from(shape::Capsule {
         radius: 0.02,
@@ -23,6 +25,10 @@ pub fn build_gizmo(
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
         height: 0.2,
         radius: 0.09,
+        ..Default::default()
+    }));
+    let plane_mesh = meshes.add(Mesh::from(shape::Plane {
+        size: plane_size,
         ..Default::default()
     }));
     let sphere_mesh = meshes.add(Mesh::from(shape::Icosphere {
@@ -99,6 +105,21 @@ pub fn build_gizmo(
                 });
             parent
                 .spawn_bundle(MaterialMeshBundle {
+                    mesh: plane_mesh.clone(),
+                    material: gizmo_matl_x_sel.clone(),
+                    transform: Transform::from_matrix(Mat4::from_rotation_translation(
+                        Quat::from_rotation_z(std::f32::consts::PI / -2.0),
+                        Vec3::new(0., plane_offset, plane_offset),
+                    )),
+                    ..Default::default()
+                })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::TranslatePlane {
+                    original: Vec3::X,
+                    normal: Vec3::X,
+                });
+            parent
+                .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
                     material: gizmo_matl_y_sel.clone(),
                     transform: Transform::from_translation(Vec3::new(0.0, axis_length, 0.0)),
@@ -108,6 +129,22 @@ pub fn build_gizmo(
                 .insert(TransformGizmoInteraction::TranslateAxis {
                     original: Vec3::Y,
                     axis: Vec3::Y,
+                });
+            parent
+                .spawn_bundle(MaterialMeshBundle {
+                    mesh: plane_mesh.clone(),
+                    material: gizmo_matl_y_sel.clone(),
+                    transform: Transform::from_translation(Vec3::new(
+                        plane_offset,
+                        0.0,
+                        plane_offset,
+                    )),
+                    ..Default::default()
+                })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::TranslatePlane {
+                    original: Vec3::Y,
+                    normal: Vec3::Y,
                 });
             parent
                 .spawn_bundle(MaterialMeshBundle {
@@ -124,17 +161,22 @@ pub fn build_gizmo(
                     original: Vec3::Z,
                     axis: Vec3::Z,
                 });
-            /*
-                        // Origin
                         parent
                             .spawn_bundle(MaterialMeshBundle {
-                                mesh: sphere_mesh.clone(),
-                                material: gizmo_matl_origin,
+                    mesh: plane_mesh.clone(),
+                    material: gizmo_matl_z_sel.clone(),
+                    transform: Transform::from_matrix(Mat4::from_rotation_translation(
+                        Quat::from_rotation_x(std::f32::consts::PI / 2.0),
+                        Vec3::new(plane_offset, plane_offset, 0.0),
+                    )),
                                 ..Default::default()
                             })
                             .insert(PickableGizmo::default())
-                            .insert(TransformGizmoInteraction::TranslateOrigin);
-            */
+                .insert(TransformGizmoInteraction::TranslatePlane {
+                    original: Vec3::Z,
+                    normal: Vec3::Z,
+                });
+
             // Rotation Arcs
             parent.spawn_bundle(MaterialMeshBundle {
                 mesh: rotation_mesh.clone(),
