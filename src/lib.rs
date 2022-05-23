@@ -87,6 +87,7 @@ impl Plugin for TransformGizmoPlugin {
             CoreStage::PreUpdate,
             SystemSet::new()
                 .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
+                .with_system(update_gizmo_settings.label(TransformGizmoSystem::UpdateSettings))
                 .with_system(
                     hover_gizmo
                         .label(TransformGizmoSystem::Hover)
@@ -104,12 +105,6 @@ impl Plugin for TransformGizmoPlugin {
             CoreStage::PostUpdate,
             SystemSet::new()
                 .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
-                .with_system(update_gizmo_settings.label(TransformGizmoSystem::UpdateSettings))
-                .with_system(
-                    adjust_view_translate_gizmo
-                        .label(TransformGizmoSystem::AdjustViewTranslateGizmo)
-                        .before(TransformGizmoSystem::Drag),
-                )
                 .with_system(
                     drag_gizmo
                         .label(TransformGizmoSystem::Drag)
@@ -120,6 +115,11 @@ impl Plugin for TransformGizmoPlugin {
                         .label(TransformGizmoSystem::Place)
                         .after(TransformSystem::TransformPropagate)
                         .after(TransformGizmoSystem::Drag),
+                )
+                .with_system(
+                    adjust_view_translate_gizmo
+                        .label(TransformGizmoSystem::AdjustViewTranslateGizmo)
+                        .after(TransformGizmoSystem::Place),
                 ),
         )
         .add_startup_system(mesh::build_gizmo)
@@ -459,7 +459,7 @@ fn place_gizmo(
 
 fn update_gizmo_settings(
     plugin_settings: Res<GizmoSettings>,
-    mut interactions: Query<&mut TransformGizmoInteraction>,
+    mut interactions: Query<&mut TransformGizmoInteraction, Without<ViewTranslateGizmo>>,
     mut rotations: Query<&mut Visibility, With<RotationGizmo>>,
 ) {
     if !plugin_settings.is_changed() {
@@ -493,7 +493,6 @@ fn update_gizmo_settings(
                     axis: rotation.mul_vec3(original),
                 })
             }
-            _ => None,
         } {
             *interaction = rotated_interaction;
         }
@@ -506,12 +505,12 @@ fn update_gizmo_settings(
 
 fn adjust_view_translate_gizmo(
     mut gizmo: Query<
-        (&mut Transform, &mut TransformGizmoInteraction),
+        (&mut GlobalTransform, &mut TransformGizmoInteraction),
         (With<ViewTranslateGizmo>, Without<GizmoPickSource>),
     >,
     camera: Query<&Transform, With<GizmoPickSource>>,
 ) {
-    let (mut transform, mut interaction) = match gizmo.get_single_mut() {
+    let (mut global_transform, mut interaction) = match gizmo.get_single_mut() {
         Ok(x) => x,
         Err(_) => return,
     };
@@ -521,15 +520,15 @@ fn adjust_view_translate_gizmo(
         Err(_) => return,
     };
 
-    let direction = (cam_transform.translation - transform.translation).normalize();
+    let direction = cam_transform.local_z();
     *interaction = TransformGizmoInteraction::TranslatePlane {
         original: Vec3::ZERO,
         normal: direction,
     };
 
-    transform.look_at(
-        Quat::from_axis_angle(cam_transform.local_z(), std::f32::consts::PI * 0.25)
-            * cam_transform.local_y(),
+    global_transform.rotation = Quat::from_mat3(&Mat3::from_cols(
+        direction.cross(cam_transform.local_y()),
         direction,
-    );
+        cam_transform.local_y(),
+    ));
 }
