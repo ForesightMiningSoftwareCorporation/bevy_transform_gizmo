@@ -84,7 +84,6 @@ impl Plugin for TransformGizmoPlugin {
                     .with_system(
                         hover_gizmo
                             .label(TransformGizmoSystem::Hover)
-                            .after(TransformGizmoSystem::UpdateSettings)
                             .after(RaycastSystem::UpdateRaycast),
                     )
                     .with_system(
