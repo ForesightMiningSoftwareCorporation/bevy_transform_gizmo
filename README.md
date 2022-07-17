@@ -1,6 +1,10 @@
 <div align="center">
     
 # Bevy Transform Gizmo
+Updated for:
+bevy = "0.7.0"
+bevy_mod_picking = "0.7.0"
+bevy_mod_raycast = "0.5.0"
 
 **Simple 3D transform gizmo for bevy**
     
