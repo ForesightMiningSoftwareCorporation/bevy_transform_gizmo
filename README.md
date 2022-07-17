@@ -36,7 +36,7 @@ This plugin is built on and relies on [`bevy_mod_picking`](https://github.com/ae
 Add the plugin to the `[dependencies]` in `Cargo.toml`
 
 ```toml
-bevy_transform_gizmo = { git = "https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo", branch = "main" }
+bevy_transform_gizmo = "0.2"
 ```
 
 You will need to add the transform gizmo plugin, as well as make sure you have also brought in the picking plugin.
