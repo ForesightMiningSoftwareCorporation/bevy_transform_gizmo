@@ -8,7 +8,7 @@ use normalization::*;
 
 mod gizmo_material;
 mod mesh;
-mod normalization;
+pub mod normalization;
 
 pub mod picking;
 pub use picking::{GizmoPickSource, PickableGizmo};

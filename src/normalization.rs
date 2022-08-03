@@ -17,7 +17,7 @@ impl Plugin for Ui3dNormalization {
 }
 
 /// Marker struct that marks entities with meshes that should be scaled relative to the camera.
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Normalize3d {
     /// Length of the object in world space units
     pub size_in_world: f32,
@@ -68,7 +68,7 @@ pub fn normalize(
         ) {
             coords
         } else {
-            break;
+            continue;
         };
         let pixel_root = if let Some(coords) = Camera::world_to_screen(
             &camera,
@@ -79,7 +79,7 @@ pub fn normalize(
         ) {
             coords
         } else {
-            break;
+            continue;
         };
         let actual_pixel_size = pixel_root.distance(pixel_end);
         let required_scale = normalize.desired_pixel_size / actual_pixel_size;
