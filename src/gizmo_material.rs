@@ -110,4 +110,13 @@ impl Material for GizmoMaterial {
             label: None,
         })
     }
+
+    fn specialize(
+        _pipeline: &MaterialPipeline<Self>,
+        descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
+        _layout: &bevy::render::mesh::MeshVertexBufferLayout,
+    ) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
+        descriptor.primitive.cull_mode = None;
+        Ok(())
+    }
 }
