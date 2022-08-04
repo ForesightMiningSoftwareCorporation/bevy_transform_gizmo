@@ -12,6 +12,7 @@ mod mesh;
 pub mod normalization;
 
 pub mod picking;
+use picking::GizmoRaycastSet;
 pub use picking::{GizmoPickSource, PickableGizmo};
 
 pub struct GizmoSystemsEnabled(pub bool);
@@ -92,7 +93,7 @@ impl Plugin for TransformGizmoPlugin {
                     hover_gizmo
                         .label(TransformGizmoSystem::Hover)
                         .after(TransformGizmoSystem::UpdateSettings)
-                        .after(RaycastSystem::UpdateRaycast),
+                        .after(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
                 )
                 .with_system(
                     grab_gizmo
@@ -138,6 +139,7 @@ pub struct TransformGizmoBundle {
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visibility,
+    computed_visibility: ComputedVisibility,
     normalize: Normalize3d,
 }
 
@@ -148,6 +150,7 @@ impl Default for TransformGizmoBundle {
             interaction: Interaction::None,
             picking_blocker: PickingBlocker,
             visible: Visibility { is_visible: false },
+            computed_visibility: ComputedVisibility::default(),
             gizmo: TransformGizmo::default(),
             global_transform: GlobalTransform::default(),
             normalize: Normalize3d::new(1.5, 150.0),
@@ -184,7 +187,7 @@ pub enum TransformGizmoInteraction {
 
 #[derive(Component)]
 struct InitialTransform {
-    transform: GlobalTransform,
+    transform: Transform,
     rotation_offset: Vec3,
 }
 
@@ -229,7 +232,7 @@ fn drag_gizmo(
     let gizmo_origin = match gizmo.origin_drag_start {
         Some(origin) => origin,
         None => {
-            let origin = gizmo_transform.translation;
+            let origin = gizmo_transform.translation();
             gizmo.origin_drag_start = Some(origin);
             origin
         }
@@ -403,7 +406,7 @@ fn grab_gizmo(
                 {
                     if selection.selected() {
                         commands.entity(entity).insert(InitialTransform {
-                            transform: *transform,
+                            transform: transform.compute_transform(),
                             rotation_offset: rotation_origin_offset
                                 .map(|offset| offset.0)
                                 .unwrap_or(Vec3::ZERO),
@@ -453,7 +456,10 @@ fn place_gizmo(
         .iter()
         .filter(|(s, ..)| s.selected())
         .map(|(_s, t, offset)| {
-            t.translation + offset.map(|o| t.rotation * o.0).unwrap_or(Vec3::ZERO)
+            t.translation()
+                + offset
+                    .map(|o| t.compute_transform().rotation * o.0)
+                    .unwrap_or(Vec3::ZERO)
         })
         .collect();
     let n_selected = selected.len();
@@ -461,10 +467,15 @@ fn place_gizmo(
     let centroid = transform_sum / n_selected as f32;
     // Set the gizmo's position and visibility
     if let Ok((mut g_transform, mut transform, mut visible)) = queries.p1().get_single_mut() {
-        g_transform.translation = centroid;
-        g_transform.rotation = plugin_settings.alignment_rotation;
-        transform.translation = g_transform.translation;
-        transform.rotation = g_transform.rotation;
+        let gt = g_transform.compute_transform();
+        *g_transform = Transform {
+            translation: centroid,
+            rotation: plugin_settings.alignment_rotation,
+            ..gt
+        }
+        .into();
+        transform.translation = centroid;
+        transform.rotation = plugin_settings.alignment_rotation;
         visible.is_visible = n_selected > 0;
     } else {
         error!("Number of gizmos is != 1");
@@ -552,10 +563,14 @@ fn adjust_view_translate_gizmo(
         original: Vec3::ZERO,
         normal: direction,
     };
-
-    global_transform.rotation = Quat::from_mat3(&Mat3::from_cols(
+    let rotation = Quat::from_mat3(&Mat3::from_cols(
         direction.cross(cam_transform.local_y()),
         direction,
         cam_transform.local_y(),
     ));
+    *global_transform = Transform {
+        rotation,
+        ..global_transform.compute_transform()
+    }
+    .into();
 }

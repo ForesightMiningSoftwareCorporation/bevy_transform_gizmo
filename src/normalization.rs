@@ -35,8 +35,6 @@ impl Normalize3d {
 
 #[allow(clippy::type_complexity)]
 pub fn normalize(
-    windows: Res<Windows>,
-    images: Res<Assets<Image>>,
     mut query: ParamSet<(
         Query<(&GlobalTransform, &Camera), With<PickingCamera>>,
         Query<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
@@ -53,27 +51,19 @@ pub fn normalize(
     let view = camera_position.compute_matrix().inverse();
 
     for (mut transform, mut global_transform, normalize) in query.p1().iter_mut() {
-        let distance = view.transform_point3(global_transform.translation).z;
-
-        let pixel_end = if let Some(coords) = Camera::world_to_screen(
+        let distance = view.transform_point3(global_transform.translation()).z;
+        let gt = global_transform.compute_transform();
+        let pixel_end = if let Some(coords) = Camera::world_to_viewport(
             &camera,
-            &windows,
-            &images,
             &GlobalTransform::default(),
-            Vec3::new(
-                normalize.size_in_world * global_transform.scale.x,
-                0.0,
-                distance,
-            ),
+            Vec3::new(normalize.size_in_world * gt.scale.x, 0.0, distance),
         ) {
             coords
         } else {
             continue;
         };
-        let pixel_root = if let Some(coords) = Camera::world_to_screen(
+        let pixel_root = if let Some(coords) = Camera::world_to_viewport(
             &camera,
-            &windows,
-            &images,
             &GlobalTransform::default(),
             Vec3::new(0.0, 0.0, distance),
         ) {
@@ -83,7 +73,7 @@ pub fn normalize(
         };
         let actual_pixel_size = pixel_root.distance(pixel_end);
         let required_scale = normalize.desired_pixel_size / actual_pixel_size;
-        global_transform.scale *= Vec3::splat(required_scale);
-        transform.scale = global_transform.scale;
+        transform.scale = gt.scale * Vec3::splat(required_scale);
+        *global_transform = (*transform).into();
     }
 }
