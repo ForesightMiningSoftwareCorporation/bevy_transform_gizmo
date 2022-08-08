@@ -1,6 +1,6 @@
 [package]
 name = "bevy_transform_gizmo"
-version = "0.2.1"
+version = "0.3.0"
 authors = [
     "Aevyrie Roessler <aevyrie@gmail.com>",
     "Foresight Mining Software Corporation",
@@ -14,16 +14,16 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.7", default-features = false, features = ["render"] }
-bevy_mod_picking = "0.6.1"
-bevy_mod_raycast = "0.4.0"
+bevy = { version = "0.8", default-features = false, features = ["render"] }
+bevy_mod_picking = "0.8"
+bevy_mod_raycast = "0.6"
 
 [dependencies.naga]
 features = ["wgsl-in", "spv-out", "wgsl-out"]
-version = "0.8"
+version = "0.9"
 
 [dev-dependencies]
-bevy = { version = "0.7", default-features = false, features = [
+bevy = { version = "0.8", default-features = false, features = [
     "bevy_winit",
     "x11",
 ] }
