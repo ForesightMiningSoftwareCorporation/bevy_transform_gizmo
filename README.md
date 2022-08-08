@@ -4,7 +4,7 @@
 
 **Simple 3D transform gizmo for bevy**
     
-https://user-images.githubusercontent.com/2632925/164319240-75101823-877f-4f05-a47b-2c1348cf16fd.mp4
+https://user-images.githubusercontent.com/2632925/183512583-a8d2b2de-4997-45bb-9565-0a86c06cda90.mp4
     
 [![crates.io](https://img.shields.io/crates/v/bevy_transform_gizmo)](https://crates.io/crates/bevy_transform_gizmo)
 [![docs.rs](https://docs.rs/bevy_transform_gizmo/badge.svg)](https://docs.rs/bevy_transform_gizmo)
@@ -24,7 +24,7 @@ cargo run --example minimal
 # Features
 
 * Prebuilt transform gizmo appears when you select a designated mesh
-* Translation handles
+* Translation handles (axis, plane, and normal to camera)
 * Rotation handles
 * Gizmo always renders on top of the main render pass
 * Gizmo is always the same size at it moves closer/further from the camera
@@ -36,14 +36,14 @@ This plugin is built on and relies on [`bevy_mod_picking`](https://github.com/ae
 Add the plugin to the `[dependencies]` in `Cargo.toml`
 
 ```toml
-bevy_transform_gizmo = { git = "https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo", branch = "main" }
+bevy_transform_gizmo = "0.2"
 ```
 
 You will need to add the transform gizmo plugin, as well as make sure you have also brought in the picking plugin.
 
 ```rust
 .add_plugins(bevy_mod_picking::DefaultPickingPlugins)
-.add_plugin(bevy_transform_gizmo::TransformGizmoPlugin)
+.add_plugin(bevy_transform_gizmo::TransformGizmoPlugin::default())
 ```
 
 Next, you will need to mark your picking camera as your gizmo camera:
