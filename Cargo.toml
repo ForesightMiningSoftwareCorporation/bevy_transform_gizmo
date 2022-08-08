@@ -22,7 +22,7 @@ bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast", branch
 
 [dependencies.naga]
 features = ["wgsl-in", "spv-out", "wgsl-out"]
-version = "0.8"
+version = "0.9"
 
 [dev-dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
