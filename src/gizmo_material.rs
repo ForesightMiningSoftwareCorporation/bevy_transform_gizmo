@@ -35,7 +35,7 @@ impl Material for GizmoMaterial {
     }
 
     fn alpha_mode(&self) -> AlphaMode {
-        AlphaMode::Blend
+        AlphaMode::Opaque
     }
 
     fn specialize(

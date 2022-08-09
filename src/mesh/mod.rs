@@ -19,37 +19,37 @@ pub fn build_gizmo(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<GizmoMaterial>>,
 ) {
-    let axis_length = 1.0;
-    let arc_radius = 0.8;
-    let plane_size = axis_length * 0.3;
+    let axis_length = 1.3;
+    let arc_radius = 1.;
+    let plane_size = axis_length * 0.25;
     let plane_offset = plane_size / 2. + axis_length * 0.2;
     // Define gizmo meshes
     let arrow_tail_mesh = meshes.add(Mesh::from(shape::Capsule {
-        radius: 0.02,
+        radius: 0.05,
         depth: axis_length,
         ..Default::default()
     }));
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
-        height: 0.2,
-        radius: 0.09,
+        height: 0.25,
+        radius: 0.12,
         ..Default::default()
     }));
     let plane_mesh = meshes.add(Mesh::from(shape::Plane { size: plane_size }));
     let sphere_mesh = meshes.add(Mesh::from(shape::Icosphere {
-        radius: 0.1,
+        radius: 0.2,
         subdivisions: 3,
     }));
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
-        ring_radius: 0.02,
+        ring_radius: 0.05,
         ..Default::default()
     }));
     //let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
     // Define gizmo materials
-    let (s, l, a) = (0.8, 0.6, 0.8);
-    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::hsla(0.0, s, l, a)));
-    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::hsla(120.0, s, l, a)));
-    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::hsla(240.0, s, l, a)));
+    let (s, l) = (0.8, 0.6);
+    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::hsl(0.0, s, l)));
+    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::hsl(120.0, s, l)));
+    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::hsl(240.0, s, l)));
     let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::hsl(0.0, s, l)));
     let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::hsl(120.0, s, l)));
     let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::hsl(240.0, s, l)));
@@ -74,6 +74,11 @@ pub fn build_gizmo(
                     )),
                     ..Default::default()
                 })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::TranslateAxis {
+                    original: Vec3::X,
+                    axis: Vec3::X,
+                })
                 .insert(NotShadowCaster);
             parent
                 .spawn_bundle(MaterialMeshBundle {
@@ -85,6 +90,11 @@ pub fn build_gizmo(
                     )),
                     ..Default::default()
                 })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::TranslateAxis {
+                    original: Vec3::Y,
+                    axis: Vec3::Y,
+                })
                 .insert(NotShadowCaster);
             parent
                 .spawn_bundle(MaterialMeshBundle {
@@ -95,6 +105,11 @@ pub fn build_gizmo(
                         Vec3::new(0.0, 0.0, axis_length / 2.0),
                     )),
                     ..Default::default()
+                })
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::TranslateAxis {
+                    original: Vec3::Z,
+                    axis: Vec3::Z,
                 })
                 .insert(NotShadowCaster);
 
@@ -199,7 +214,7 @@ pub fn build_gizmo(
 
             parent
                 .spawn_bundle(MaterialMeshBundle {
-                    mesh: plane_mesh.clone(),
+                    mesh: sphere_mesh.clone(),
                     material: gizmo_matl_v_sel.clone(),
                     ..Default::default()
                 })
@@ -223,6 +238,11 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(RotationGizmo)
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::RotateAxis {
+                    original: Vec3::X,
+                    axis: Vec3::X,
+                })
                 .insert(NotShadowCaster);
             parent
                 .spawn_bundle(MaterialMeshBundle {
@@ -231,6 +251,11 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(RotationGizmo)
+                .insert(PickableGizmo::default())
+                .insert(TransformGizmoInteraction::RotateAxis {
+                    original: Vec3::Y,
+                    axis: Vec3::Y,
+                })
                 .insert(NotShadowCaster);
             parent
                 .spawn_bundle(MaterialMeshBundle {
@@ -243,62 +268,67 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(RotationGizmo)
-                .insert(NotShadowCaster);
-
-            // Rotation Handles
-            parent
-                .spawn_bundle(MaterialMeshBundle {
-                    mesh: sphere_mesh.clone(),
-                    material: gizmo_matl_x_sel.clone(),
-                    transform: Transform::from_translation(Vec3::new(
-                        0.0,
-                        f32::to_radians(45.0).sin() * arc_radius,
-                        f32::to_radians(45.0).sin() * arc_radius,
-                    )),
-                    ..Default::default()
-                })
-                .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::RotateAxis {
-                    original: Vec3::X,
-                    axis: Vec3::X,
-                })
-                .insert(RotationGizmo)
-                .insert(NotShadowCaster);
-            parent
-                .spawn_bundle(MaterialMeshBundle {
-                    mesh: sphere_mesh.clone(),
-                    material: gizmo_matl_y_sel.clone(),
-                    transform: Transform::from_translation(Vec3::new(
-                        f32::to_radians(45.0).sin() * arc_radius,
-                        0.0,
-                        f32::to_radians(45.0).sin() * arc_radius,
-                    )),
-                    ..Default::default()
-                })
-                .insert(PickableGizmo::default())
-                .insert(TransformGizmoInteraction::RotateAxis {
-                    original: Vec3::Y,
-                    axis: Vec3::Y,
-                })
-                .insert(RotationGizmo)
-                .insert(NotShadowCaster);
-            parent
-                .spawn_bundle(MaterialMeshBundle {
-                    mesh: sphere_mesh.clone(),
-                    material: gizmo_matl_z_sel.clone(),
-                    transform: Transform::from_translation(Vec3::new(
-                        f32::to_radians(45.0).sin() * arc_radius,
-                        f32::to_radians(45.0).sin() * arc_radius,
-                        0.0,
-                    )),
-                    ..Default::default()
-                })
                 .insert(PickableGizmo::default())
                 .insert(TransformGizmoInteraction::RotateAxis {
                     original: Vec3::Z,
                     axis: Vec3::Z,
                 })
-                .insert(RotationGizmo)
                 .insert(NotShadowCaster);
+
+            // Rotation Handles
+            // parent
+            //     .spawn_bundle(MaterialMeshBundle {
+            //         mesh: sphere_mesh.clone(),
+            //         material: gizmo_matl_x_sel.clone(),
+            //         transform: Transform::from_translation(Vec3::new(
+            //             0.0,
+            //             f32::to_radians(45.0).sin() * arc_radius,
+            //             f32::to_radians(45.0).sin() * arc_radius,
+            //         )),
+            //         ..Default::default()
+            //     })
+            //     .insert(PickableGizmo::default())
+            //     .insert(TransformGizmoInteraction::RotateAxis {
+            //         original: Vec3::X,
+            //         axis: Vec3::X,
+            //     })
+            //     .insert(RotationGizmo)
+            //     .insert(NotShadowCaster);
+            // parent
+            //     .spawn_bundle(MaterialMeshBundle {
+            //         mesh: sphere_mesh.clone(),
+            //         material: gizmo_matl_y_sel.clone(),
+            //         transform: Transform::from_translation(Vec3::new(
+            //             f32::to_radians(45.0).sin() * arc_radius,
+            //             0.0,
+            //             f32::to_radians(45.0).sin() * arc_radius,
+            //         )),
+            //         ..Default::default()
+            //     })
+            //     .insert(PickableGizmo::default())
+            //     .insert(TransformGizmoInteraction::RotateAxis {
+            //         original: Vec3::Y,
+            //         axis: Vec3::Y,
+            //     })
+            //     .insert(RotationGizmo)
+            //     .insert(NotShadowCaster);
+            // parent
+            //     .spawn_bundle(MaterialMeshBundle {
+            //         mesh: sphere_mesh.clone(),
+            //         material: gizmo_matl_z_sel.clone(),
+            //         transform: Transform::from_translation(Vec3::new(
+            //             f32::to_radians(45.0).sin() * arc_radius,
+            //             f32::to_radians(45.0).sin() * arc_radius,
+            //             0.0,
+            //         )),
+            //         ..Default::default()
+            //     })
+            //     .insert(PickableGizmo::default())
+            //     .insert(TransformGizmoInteraction::RotateAxis {
+            //         original: Vec3::Z,
+            //         axis: Vec3::Z,
+            //     })
+            //     .insert(RotationGizmo)
+            //     .insert(NotShadowCaster);
         });
 }
