@@ -1,7 +1,8 @@
 use crate::{
-    gizmo_material::GizmoMaterial, PickableGizmo, TransformGizmoBundle, TransformGizmoInteraction,
+    gizmo_material::GizmoMaterial, InternalGizmoCamera, PickableGizmo, TransformGizmoBundle,
+    TransformGizmoInteraction,
 };
-use bevy::{pbr::NotShadowCaster, prelude::*};
+use bevy::{pbr::NotShadowCaster, prelude::*, render::view::RenderLayers};
 use bevy_mod_raycast::NoBackfaceCulling;
 
 mod cone;
@@ -74,7 +75,8 @@ pub fn build_gizmo(
                     )),
                     ..Default::default()
                 })
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: arrow_tail_mesh.clone(),
@@ -85,7 +87,8 @@ pub fn build_gizmo(
                     )),
                     ..Default::default()
                 })
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: arrow_tail_mesh,
@@ -96,7 +99,8 @@ pub fn build_gizmo(
                     )),
                     ..Default::default()
                 })
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
 
             // Translation Handles
             parent
@@ -114,7 +118,8 @@ pub fn build_gizmo(
                     original: Vec3::X,
                     axis: Vec3::X,
                 })
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: plane_mesh.clone(),
@@ -131,7 +136,8 @@ pub fn build_gizmo(
                     normal: Vec3::X,
                 })
                 .insert(NoBackfaceCulling)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
@@ -144,7 +150,8 @@ pub fn build_gizmo(
                     original: Vec3::Y,
                     axis: Vec3::Y,
                 })
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: plane_mesh.clone(),
@@ -162,7 +169,8 @@ pub fn build_gizmo(
                     normal: Vec3::Y,
                 })
                 .insert(NoBackfaceCulling)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
@@ -178,7 +186,8 @@ pub fn build_gizmo(
                     original: Vec3::Z,
                     axis: Vec3::Z,
                 })
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: plane_mesh.clone(),
@@ -195,7 +204,8 @@ pub fn build_gizmo(
                     normal: Vec3::Z,
                 })
                 .insert(NoBackfaceCulling)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
 
             parent
                 .spawn_bundle(MaterialMeshBundle {
@@ -209,7 +219,8 @@ pub fn build_gizmo(
                     normal: Vec3::Z,
                 })
                 .insert(ViewTranslateGizmo)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
 
             // Rotation Arcs
             parent
@@ -223,7 +234,8 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(RotationGizmo)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: rotation_mesh.clone(),
@@ -231,7 +243,8 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(RotationGizmo)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: rotation_mesh.clone(),
@@ -243,7 +256,8 @@ pub fn build_gizmo(
                     ..Default::default()
                 })
                 .insert(RotationGizmo)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
 
             // Rotation Handles
             parent
@@ -263,7 +277,8 @@ pub fn build_gizmo(
                     axis: Vec3::X,
                 })
                 .insert(RotationGizmo)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
@@ -281,7 +296,8 @@ pub fn build_gizmo(
                     axis: Vec3::Y,
                 })
                 .insert(RotationGizmo)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
             parent
                 .spawn_bundle(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
@@ -299,6 +315,18 @@ pub fn build_gizmo(
                     axis: Vec3::Z,
                 })
                 .insert(RotationGizmo)
-                .insert(NotShadowCaster);
+                .insert(NotShadowCaster)
+                .insert(RenderLayers::layer(12));
         });
+
+    commands
+        .spawn_bundle(Camera3dBundle {
+            camera_3d: Camera3d {
+                clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
+                depth_load_op: bevy::core_pipeline::core_3d::Camera3dDepthLoadOp::Clear(0.),
+            },
+            ..Default::default()
+        })
+        .insert(InternalGizmoCamera)
+        .insert(RenderLayers::layer(12));
 }
