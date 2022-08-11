@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use bevy::{ecs::schedule::ShouldRun, prelude::*, transform::TransformSystem};
 use bevy_mod_picking::{
     self, PickingBlocker, PickingCamera, PickingSystem, Primitive3d, Selection,
