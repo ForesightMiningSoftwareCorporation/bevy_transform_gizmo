@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use bevy::{ecs::schedule::ShouldRun, prelude::*, transform::TransformSystem};
 use bevy_mod_picking::{
     self, PickingBlocker, PickingCamera, PickingSystem, Primitive3d, Selection,
@@ -15,6 +17,7 @@ pub mod picking;
 use picking::GizmoRaycastSet;
 pub use picking::{GizmoPickSource, PickableGizmo};
 
+#[derive(Resource)]
 pub struct GizmoSystemsEnabled(pub bool);
 pub use normalization::Ui3dNormalization;
 
@@ -49,6 +52,10 @@ pub struct TransformGizmoEvent {
 #[derive(Component)]
 pub struct GizmoTransformable;
 
+#[derive(Component)]
+pub struct InternalGizmoCamera;
+
+#[derive(Resource)]
 pub struct GizmoSettings {
     /// Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     /// coordinate system.
@@ -124,7 +131,8 @@ impl Plugin for TransformGizmoPlugin {
                         .label(TransformGizmoSystem::AdjustViewTranslateGizmo)
                         .after(TransformGizmoSystem::Place)
                         .after(propagate_gizmo_elements),
-                ),
+                )
+                .with_system(gizmo_cam_copy_settings.after(TransformSystem::TransformPropagate)),
         )
         .add_startup_system(mesh::build_gizmo)
         .add_startup_system_to_stage(StartupStage::PostStartup, place_gizmo);
@@ -573,4 +581,35 @@ fn adjust_view_translate_gizmo(
         ..global_transform.compute_transform()
     }
     .into();
+}
+
+fn gizmo_cam_copy_settings(
+    main_cam: Query<
+        (
+            &Camera,
+            &GlobalTransform,
+            ChangeTrackers<GlobalTransform>,
+            ChangeTrackers<Camera>,
+        ),
+        With<GizmoPickSource>,
+    >,
+    mut gizmo_cam: Query<
+        (&mut Camera, &mut GlobalTransform),
+        (With<InternalGizmoCamera>, Without<GizmoPickSource>),
+    >,
+) {
+    let (main_cam, main_cam_pos, mcpos_change, mc_change) = if let Ok(x) = main_cam.get_single() {
+        x
+    } else {
+        error!("No `GizmoCamera` found! Insert `GizmoCamera` onto your primary 3d camera");
+        return;
+    };
+    let (mut gizmo_cam, mut gizmo_cam_pos) = gizmo_cam.single_mut();
+    if mcpos_change.is_changed() {
+        *gizmo_cam_pos = *main_cam_pos;
+    }
+    if mc_change.is_changed() {
+        *gizmo_cam = main_cam.clone();
+        gizmo_cam.priority += 10;
+    }
 }
