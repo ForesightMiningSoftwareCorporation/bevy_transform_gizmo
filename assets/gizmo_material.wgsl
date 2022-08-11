@@ -44,9 +44,6 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     let world_position = mesh.model * vec4<f32>(vertex.position, 1.0);
     var out: VertexOutput;
     var modified_clip = view.view_proj * world_position;
-    // Remap the depth to be right in front of the camera. We remap (mix) here instead of hardcoding
-    // the depth, to ensure the components of the gizmo mesh are sorted correctly.
-    modified_clip.z = mix(0.999, 1.0, modified_clip.z);
     out.clip_position = modified_clip;
     return out;
 }
