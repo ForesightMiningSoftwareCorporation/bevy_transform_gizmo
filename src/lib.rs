@@ -1,9 +1,7 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::{ecs::schedule::ShouldRun, prelude::*, transform::TransformSystem};
-use bevy_mod_picking::{
-    self, PickingBlocker, PickingCamera, PickingSystem, Primitive3d, Selection,
-};
+use bevy_mod_picking::{self, PickingBlocker, PickingCamera, Primitive3d, Selection};
 use bevy_mod_raycast::RaycastSystem;
 use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};
@@ -105,8 +103,7 @@ impl Plugin for TransformGizmoPlugin {
                 .with_system(
                     grab_gizmo
                         .label(TransformGizmoSystem::Grab)
-                        .after(TransformGizmoSystem::Hover)
-                        .before(PickingSystem::PauseForBlockers),
+                        .after(TransformGizmoSystem::Hover),
                 ),
         )
         .add_system_set_to_stage(
