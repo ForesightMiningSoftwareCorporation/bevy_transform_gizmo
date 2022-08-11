@@ -99,7 +99,6 @@ impl Plugin for TransformGizmoPlugin {
                     grab_gizmo
                         .label(TransformGizmoSystem::Grab)
                         .after(TransformGizmoSystem::Hover)
-                        .before(PickingSystem::PauseForBlockers),
                 ),
         )
         .add_system_set_to_stage(
