@@ -15,6 +15,7 @@ pub mod picking;
 use picking::GizmoRaycastSet;
 pub use picking::{GizmoPickSource, PickableGizmo};
 
+#[derive(Resource, Clone, Debug)]
 pub struct GizmoSystemsEnabled(pub bool);
 pub use normalization::Ui3dNormalization;
 
@@ -39,19 +40,20 @@ pub enum TransformGizmoSystem {
     Drag,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TransformGizmoEvent {
     pub from: GlobalTransform,
     pub to: GlobalTransform,
     pub interaction: TransformGizmoInteraction,
 }
 
-#[derive(Component)]
+#[derive(Component, Default, Clone, Debug)]
 pub struct GizmoTransformable;
 
-#[derive(Component)]
+#[derive(Component, Default, Clone, Debug)]
 pub struct InternalGizmoCamera;
 
+#[derive(Resource, Clone, Debug)]
 pub struct GizmoSettings {
     /// Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     /// coordinate system.
@@ -59,7 +61,7 @@ pub struct GizmoSettings {
     pub allow_rotation: bool,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct TransformGizmoPlugin {
     // Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     // coordinate system.
