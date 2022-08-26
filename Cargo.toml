@@ -15,7 +15,7 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 
 [dependencies]
 bevy = { version = "0.8", default-features = false, features = ["render"] }
-bevy_mod_picking = "0.8"
+bevy_mod_picking = "0.9"
 bevy_mod_raycast = "0.6"
 
 [dependencies.naga]
