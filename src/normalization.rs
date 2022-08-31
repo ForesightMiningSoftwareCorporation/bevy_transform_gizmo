@@ -1,7 +1,7 @@
 use bevy::{prelude::*, render::camera::Camera, transform::transform_propagate_system};
 use bevy_mod_picking::PickingCamera;
 
-use crate::GizmoSystemsEnabledCriteria;
+use crate::{GizmoError, GizmoSystemsEnabledCriteria};
 
 pub struct Ui3dNormalization;
 impl Plugin for Ui3dNormalization {
@@ -9,9 +9,10 @@ impl Plugin for Ui3dNormalization {
         app.add_system_to_stage(
             CoreStage::PostUpdate,
             normalize
+                .chain(crate::print_gizmo_error)
                 .with_run_criteria(GizmoSystemsEnabledCriteria)
                 .after(transform_propagate_system)
-                .after(crate::place_gizmo),
+                .after(crate::TransformGizmoSystem::Place),
         );
     }
 }
@@ -39,15 +40,14 @@ pub fn normalize(
         Query<(&GlobalTransform, &Camera), With<PickingCamera>>,
         Query<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
     )>,
-) {
+) -> Result<(), GizmoError> {
     // TODO: can be improved by manually specifying the active camera to normalize against. The
     // majority of cases will only use a single camera for this viewer, so this is sufficient.
-    let (camera_position, camera) = if let Ok((camera_position, camera)) = query.p0().get_single() {
-        (camera_position.to_owned(), camera.to_owned())
-    } else {
-        error!("More than one picking camera");
-        return;
-    };
+    let query0 = query.p0();
+    let (&camera_position, camera) = query0
+        .get_single()
+        .map_err(|_| GizmoError::NoPickingCameras)?;
+    let camera = camera.clone();
     let view = camera_position.compute_matrix().inverse();
 
     for (mut transform, mut global_transform, normalize) in query.p1().iter_mut() {
@@ -76,4 +76,5 @@ pub fn normalize(
         transform.scale = gt.scale * Vec3::splat(required_scale);
         *global_transform = (*transform).into();
     }
+    Ok(())
 }

@@ -349,6 +349,10 @@ pub fn build_gizmo(
 
     commands
         .spawn_bundle(Camera3dBundle {
+            camera: Camera {
+                is_active: false,
+                ..default()
+            },
             camera_3d: Camera3d {
                 clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
                 depth_load_op: bevy::core_pipeline::core_3d::Camera3dDepthLoadOp::Clear(0.),

@@ -1,11 +1,17 @@
 #![allow(clippy::type_complexity)]
 
-use bevy::{ecs::schedule::ShouldRun, prelude::*, transform::TransformSystem};
+use bevy::{
+    ecs::schedule::ShouldRun,
+    prelude::*,
+    transform::TransformSystem,
+    utils::{Duration, HashMap},
+};
 use bevy_mod_picking::{self, PickingBlocker, PickingCamera, Primitive3d, Selection};
 use bevy_mod_raycast::RaycastSystem;
 use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};
 use normalization::*;
+use thiserror::Error;
 
 mod gizmo_material;
 mod mesh;
@@ -21,6 +27,39 @@ pub use normalization::Ui3dNormalization;
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, RunCriteriaLabel)]
 pub struct GizmoSystemsEnabledCriteria;
+
+#[derive(Error, PartialEq, Eq, Hash, Debug, Clone, Copy)]
+pub enum GizmoError {
+    #[error("No `GizmoCamera` found! Insert `GizmoCamera` onto your primary 3d camera")]
+    NoCamera,
+    #[error(
+        "The entity with the `GizmoCamera` component is missing the camera components \
+         such as `Camera` and `GlobalTransform`"
+    )]
+    BadCameraEntity,
+    #[error("There is no cameras with the PickingCamera component")]
+    NoPickingCameras,
+    #[error("The picking camera has no rays")]
+    NoPickingRays,
+    #[error("Number of gizmos is != 1")]
+    BadGizmoCount,
+}
+const ERROR_COOLDOWN: Duration = Duration::from_secs(1);
+
+fn print_gizmo_error(
+    In(result): In<Result<(), GizmoError>>,
+    mut last_error_occurence: Local<HashMap<GizmoError, Duration>>,
+    time: Res<Time>,
+) {
+    let current = time.time_since_startup();
+    let show_again = |last_show: &Duration| *last_show < current.saturating_sub(ERROR_COOLDOWN);
+    if let Err(error) = result {
+        if last_error_occurence.get(&error).map_or(true, show_again) {
+            warn!("{error}")
+        }
+        last_error_occurence.insert(error, current);
+    }
+}
 
 fn plugin_enabled(enabled: Res<GizmoSystemsEnabled>) -> ShouldRun {
     if enabled.0 {
@@ -112,27 +151,36 @@ impl Plugin for TransformGizmoPlugin {
                 .with_run_criteria(plugin_enabled.label(GizmoSystemsEnabledCriteria))
                 .with_system(
                     drag_gizmo
+                        .chain(print_gizmo_error)
                         .label(TransformGizmoSystem::Drag)
                         .before(TransformSystem::TransformPropagate),
                 )
                 .with_system(
                     place_gizmo
+                        .chain(print_gizmo_error)
                         .label(TransformGizmoSystem::Place)
                         .after(TransformSystem::TransformPropagate)
                         .after(TransformGizmoSystem::Drag),
                 )
                 // because place_gizmo runs after the regular TransformPropagate system, it needs its own propagation
-                .with_system(propagate_gizmo_elements.after(place_gizmo))
+                .with_system(propagate_gizmo_elements.after(TransformGizmoSystem::Place))
                 .with_system(
                     adjust_view_translate_gizmo
                         .label(TransformGizmoSystem::AdjustViewTranslateGizmo)
                         .after(TransformGizmoSystem::Place)
                         .after(propagate_gizmo_elements),
                 )
-                .with_system(gizmo_cam_copy_settings.after(TransformSystem::TransformPropagate)),
+                .with_system(
+                    gizmo_cam_copy_settings
+                        .chain(print_gizmo_error)
+                        .after(TransformSystem::TransformPropagate),
+                ),
         )
         .add_startup_system(mesh::build_gizmo)
-        .add_startup_system_to_stage(StartupStage::PostStartup, place_gizmo);
+        .add_startup_system_to_stage(
+            StartupStage::PostStartup,
+            place_gizmo.chain(print_gizmo_error),
+        );
     }
 }
 
@@ -206,19 +254,11 @@ fn drag_gizmo(
         Without<TransformGizmo>,
     >,
     gizmo_query: Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
-) {
-    let picking_camera = if let Some(cam) = pick_cam.iter().last() {
-        cam
-    } else {
-        error!("Not exactly one picking camera.");
-        return;
-    };
-    let picking_ray = if let Some(ray) = picking_camera.ray() {
-        ray
-    } else {
-        error!("Picking camera does not have a ray.");
-        return;
-    };
+) -> Result<(), GizmoError> {
+    use GizmoError::{NoPickingCameras, NoPickingRays};
+    let picking_camera = pick_cam.iter().last().ok_or(NoPickingCameras)?;
+    let picking_ray = picking_camera.ray().ok_or(NoPickingRays)?;
+
     // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
     // should have no effect on the handle. We can do this by projecting the vector from the handle
     // click point to mouse's current position, onto the axis of the direction we are dragging. See
@@ -226,14 +266,10 @@ fn drag_gizmo(
     let gizmo_transform = if let Ok((transform, &Interaction::Clicked)) = gizmo_query.get_single() {
         transform.to_owned()
     } else {
-        return;
+        return Ok(());
     };
-    let mut gizmo = if let Ok(g) = gizmo_mut.get_single_mut() {
-        g
-    } else {
-        error!("Number of transform gizmos is != 1");
-        return;
-    };
+    // unwrap: this is guarenteed never panic because of the previous statement
+    let mut gizmo = gizmo_mut.get_single_mut().unwrap();
     let gizmo_origin = match gizmo.origin_drag_start {
         Some(origin) => origin,
         None => {
@@ -259,7 +295,7 @@ fn drag_gizmo(
                     }) {
                     intersection.position()
                 } else {
-                    return;
+                    return Ok(());
                 };
                 let cursor_vector: Vec3 = cursor_plane_intersection - plane_origin;
                 let cursor_projected_onto_handle = match &gizmo.drag_start {
@@ -270,7 +306,7 @@ fn drag_gizmo(
                             .dot(handle_vector.normalize())
                             * handle_vector.normalize();
                         gizmo.drag_start = Some(cursor_projected_onto_handle + plane_origin);
-                        return;
+                        return Ok(());
                     }
                 };
                 let selected_handle_vec = cursor_projected_onto_handle - plane_origin;
@@ -294,13 +330,13 @@ fn drag_gizmo(
                     }) {
                     intersection.position()
                 } else {
-                    return;
+                    return Ok(());
                 };
                 let drag_start = match gizmo.drag_start {
                     Some(drag_start) => drag_start,
                     None => {
                         gizmo.drag_start = Some(cursor_plane_intersection);
-                        return;
+                        return Ok(());
                     }
                 };
                 selected_iter.for_each(|(_s, mut t, i)| {
@@ -322,14 +358,14 @@ fn drag_gizmo(
                 {
                     intersection.position()
                 } else {
-                    return;
+                    return Ok(());
                 };
                 let cursor_vector = (cursor_plane_intersection - gizmo_origin).normalize();
                 let drag_start = match &gizmo.drag_start {
                     Some(drag_start) => *drag_start,
                     None => {
                         gizmo.drag_start = Some(cursor_vector);
-                        return; // We just started dragging, no transformation is needed yet, exit early.
+                        return Ok(()); // We just started dragging, no transformation is needed yet, exit early.
                     }
                 };
                 let dot = drag_start.dot(cursor_vector);
@@ -350,9 +386,10 @@ fn drag_gizmo(
             TransformGizmoInteraction::ScaleAxis {
                 original: _,
                 axis: _,
-            } => (),
-        }
+            } => {}
+        };
     }
+    Ok(())
 }
 
 fn hover_gizmo(
@@ -363,8 +400,8 @@ fn hover_gizmo(
     for (children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
             .get_single()
-            .expect("Missing gizmo raycast source")
-            .intersect_top()
+            .ok()
+            .and_then(|t| t.intersect_top())
         {
             if *interaction == Interaction::None {
                 for child in children
@@ -455,7 +492,8 @@ fn place_gizmo(
         >,
         Query<(&mut GlobalTransform, &mut Transform, &mut Visibility), With<TransformGizmo>>,
     )>,
-) {
+) -> Result<(), GizmoError> {
+    use GizmoError::BadGizmoCount;
     let selected: Vec<_> = queries
         .p0()
         .iter()
@@ -471,20 +509,21 @@ fn place_gizmo(
     let transform_sum = selected.iter().fold(Vec3::ZERO, |acc, t| acc + *t);
     let centroid = transform_sum / n_selected as f32;
     // Set the gizmo's position and visibility
-    if let Ok((mut g_transform, mut transform, mut visible)) = queries.p1().get_single_mut() {
-        let gt = g_transform.compute_transform();
-        *g_transform = Transform {
-            translation: centroid,
-            rotation: plugin_settings.alignment_rotation,
-            ..gt
-        }
-        .into();
-        transform.translation = centroid;
-        transform.rotation = plugin_settings.alignment_rotation;
-        visible.is_visible = n_selected > 0;
-    } else {
-        error!("Number of gizmos is != 1");
+
+    let mut queries = queries.p1();
+    let (mut g_transform, mut transform, mut visible) =
+        queries.get_single_mut().map_err(|_| BadGizmoCount)?;
+    let gt = g_transform.compute_transform();
+    *g_transform = Transform {
+        translation: centroid,
+        rotation: plugin_settings.alignment_rotation,
+        ..gt
     }
+    .into();
+    transform.translation = centroid;
+    transform.rotation = plugin_settings.alignment_rotation;
+    visible.is_visible = n_selected > 0;
+    Ok(())
 }
 
 fn propagate_gizmo_elements(
@@ -594,14 +633,13 @@ fn gizmo_cam_copy_settings(
         (&mut Camera, &mut GlobalTransform),
         (With<InternalGizmoCamera>, Without<GizmoPickSource>),
     >,
-) {
-    let (main_cam, main_cam_pos, mcpos_change, mc_change) = if let Ok(x) = main_cam.get_single() {
-        x
-    } else {
-        error!("No `GizmoCamera` found! Insert `GizmoCamera` onto your primary 3d camera");
-        return;
-    };
-    let (mut gizmo_cam, mut gizmo_cam_pos) = gizmo_cam.single_mut();
+) -> Result<(), GizmoError> {
+    use GizmoError::{BadCameraEntity, NoCamera};
+    let (main_cam, main_cam_pos, mcpos_change, mc_change) =
+        main_cam.get_single().map_err(|_| NoCamera)?;
+    let (mut gizmo_cam, mut gizmo_cam_pos) =
+        gizmo_cam.get_single_mut().map_err(|_| BadCameraEntity)?;
+
     if mcpos_change.is_changed() {
         *gizmo_cam_pos = *main_cam_pos;
     }
@@ -609,4 +647,5 @@ fn gizmo_cam_copy_settings(
         *gizmo_cam = main_cam.clone();
         gizmo_cam.priority += 10;
     }
+    Ok(())
 }

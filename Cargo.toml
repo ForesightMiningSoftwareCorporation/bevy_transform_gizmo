@@ -19,6 +19,7 @@ bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-fe
 ] }
 bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "main" }
 bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast", branch = "main" }
+thiserror = "1"
 
 [dependencies.naga]
 features = ["wgsl-in", "spv-out", "wgsl-out"]
