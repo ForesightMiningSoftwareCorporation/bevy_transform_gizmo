@@ -16,14 +16,18 @@ impl Plugin for GizmoPickingPlugin {
             SystemSet::new()
                 .with_run_criteria(GizmoSystemsEnabledCriteria)
                 .with_system(
-                    bevy_mod_raycast::build_rays::<GizmoRaycastSet>.label(RaycastSystem::BuildRays::<String>), //type annotations needed from .4 to .5
+                    bevy_mod_raycast::build_rays::<GizmoRaycastSet>
+                        .label(RaycastSystem::BuildRays::<GizmoRaycastSet>),
                 )
                 .with_system(
                     bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
-                        .label(RaycastSystem::UpdateRaycast::<String>)
-                        .after(RaycastSystem::BuildRays::<String>),
+                        .label(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>)
+                        .after(RaycastSystem::BuildRays::<GizmoRaycastSet>),
                 )
-                .with_system(update_gizmo_raycast_with_cursor.before(RaycastSystem::BuildRays::<String>)),
+                .with_system(
+                    update_gizmo_raycast_with_cursor
+                        .before(RaycastSystem::BuildRays::<GizmoRaycastSet>),
+                ),
         );
     }
 }

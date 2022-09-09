@@ -14,14 +14,14 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#bevy = { version = "0.7", default-features = false, features = ["render"] }
-bevy = { version = "0.7", default-features = false, features = [
+bevy = {git = "https://github.com/paxsethorld/bevy-fork.git", branch = "local-0-8-release", default-features = false, features = [
     "bevy_winit",
     "x11",
-] }
-bevy_mod_picking = "0.7.0"
-bevy_mod_raycast = "0.5.0"
-#glam = "0.21.2"
+]}
+bevy_mod_picking = {git = "https://github.com/paxsethorld/bevy_mod_picking.git", branch = "trial#2"} #updated for bevy 0.8
+bevy_mod_raycast = {git = "https://github.com/paxsethorld/bevy_mod_raycast.git", branch = "trial#2"}
+
+web-sys = "0.3.58"
 
 [dependencies.naga]
 features = ["wgsl-in", "spv-out", "wgsl-out"]

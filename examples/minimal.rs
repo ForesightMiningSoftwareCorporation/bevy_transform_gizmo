@@ -1,9 +1,8 @@
-use bevy::{prelude::*, window::PresentMode::Mailbox};
+use bevy::prelude::*;
 
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
-            present_mode: Mailbox,
             ..Default::default()
         })
         .insert_resource(Msaa { samples: 4 })
@@ -48,7 +47,7 @@ fn setup(
     });
     // camera
     commands
-        .spawn_bundle(PerspectiveCameraBundle {
+        .spawn_bundle(Camera3dBundle {
             transform: Transform::from_xyz(2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
