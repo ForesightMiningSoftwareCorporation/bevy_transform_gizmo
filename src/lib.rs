@@ -599,13 +599,14 @@ fn gizmo_cam_copy_settings(
         (With<InternalGizmoCamera>, Without<GizmoPickSource>),
     >,
 ) {
-    let (main_cam, main_cam_pos, main_proj, mcpos_change, mc_change, proj_change) =
-        if let Ok(x) = main_cam.get_single() {
-            x
-        } else {
-            error!("No `GizmoCamera` found! Insert `GizmoCamera` onto your primary 3d camera");
-            return;
-        };
+    let (main_cam, main_cam_pos, main_proj, mcpos_change, mc_change, proj_change) = if let Ok(x) =
+        main_cam.get_single()
+    {
+        x
+    } else {
+        error!("No `GizmoPickSource` found! Insert the `GizmoPickSource` component onto your primary 3d camera");
+        return;
+    };
     let (mut gizmo_cam, mut gizmo_cam_pos, mut proj) = gizmo_cam.single_mut();
     if mcpos_change.is_changed() {
         *gizmo_cam_pos = *main_cam_pos;
