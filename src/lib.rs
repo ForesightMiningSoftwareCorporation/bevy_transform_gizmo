@@ -1,6 +1,8 @@
 #![allow(clippy::type_complexity)]
 
-use bevy::{ecs::schedule::ShouldRun, prelude::*, transform::TransformSystem};
+use bevy::{
+    ecs::schedule::ShouldRun, prelude::*, render::camera::Projection, transform::TransformSystem,
+};
 use bevy_mod_picking::{self, PickingBlocker, PickingCamera, Primitive3d, Selection};
 use bevy_mod_raycast::RaycastSystem;
 use gizmo_material::GizmoMaterial;
@@ -585,28 +587,35 @@ fn gizmo_cam_copy_settings(
         (
             &Camera,
             &GlobalTransform,
+            &Projection,
             ChangeTrackers<GlobalTransform>,
             ChangeTrackers<Camera>,
+            ChangeTrackers<Projection>,
         ),
         With<GizmoPickSource>,
     >,
     mut gizmo_cam: Query<
-        (&mut Camera, &mut GlobalTransform),
+        (&mut Camera, &mut GlobalTransform, &mut Projection),
         (With<InternalGizmoCamera>, Without<GizmoPickSource>),
     >,
 ) {
-    let (main_cam, main_cam_pos, mcpos_change, mc_change) = if let Ok(x) = main_cam.get_single() {
+    let (main_cam, main_cam_pos, main_proj, mcpos_change, mc_change, proj_change) = if let Ok(x) =
+        main_cam.get_single()
+    {
         x
     } else {
-        error!("No `GizmoCamera` found! Insert `GizmoCamera` onto your primary 3d camera");
+        error!("No `GizmoPickSource` found! Insert the `GizmoPickSource` component onto your primary 3d camera");
         return;
     };
-    let (mut gizmo_cam, mut gizmo_cam_pos) = gizmo_cam.single_mut();
+    let (mut gizmo_cam, mut gizmo_cam_pos, mut proj) = gizmo_cam.single_mut();
     if mcpos_change.is_changed() {
         *gizmo_cam_pos = *main_cam_pos;
     }
     if mc_change.is_changed() {
         *gizmo_cam = main_cam.clone();
         gizmo_cam.priority += 10;
+    }
+    if proj_change.is_changed() {
+        *proj = main_proj.clone();
     }
 }
