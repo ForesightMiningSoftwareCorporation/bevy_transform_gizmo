@@ -33,12 +33,6 @@ cargo run --example minimal
 
 This plugin is built on and relies on [`bevy_mod_picking`](https://github.com/aevyrie/bevy_mod_picking) for 3d mouse interaction with the scene.
 
-Add the plugin to the `[dependencies]` in `Cargo.toml`
-
-```toml
-bevy_transform_gizmo = "0.2"
-```
-
 You will need to add the transform gizmo plugin, as well as make sure you have also brought in the picking plugin.
 
 ```rust
