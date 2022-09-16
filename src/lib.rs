@@ -17,7 +17,7 @@ pub mod picking;
 use picking::GizmoRaycastSet;
 pub use picking::{GizmoPickSource, PickableGizmo};
 
-#[derive(Clone, Debug)]
+#[derive(Resource, Clone, Debug)]
 pub struct GizmoSystemsEnabled(pub bool);
 pub use normalization::Ui3dNormalization;
 
@@ -55,7 +55,7 @@ pub struct GizmoTransformable;
 #[derive(Component, Default, Clone, Debug)]
 pub struct InternalGizmoCamera;
 
-#[derive(Clone, Debug)]
+#[derive(Resource, Clone, Debug)]
 pub struct GizmoSettings {
     /// Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     /// coordinate system.
