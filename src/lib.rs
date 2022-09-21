@@ -206,6 +206,7 @@ fn drag_gizmo(
         Without<TransformGizmo>,
     >,
     gizmo_query: Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
+    keyboard_input: Res<Input<KeyCode>>,
 ) {
     let picking_camera = if let Some(cam) = pick_cam.iter().last() {
         cam
@@ -277,13 +278,37 @@ fn drag_gizmo(
                 let new_handle_vec = cursor_vector.dot(selected_handle_vec.normalize())
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    *t = Transform {
-                        translation: i.transform.translation + translation,
-                        rotation: i.transform.rotation,
-                        scale: i.transform.scale,
-                    }
-                });
+
+                // Scale up
+                if keyboard_input.pressed(KeyCode::Key1){
+                    selected_iter.for_each(|(_s, mut t, i)| {
+                        *t = Transform {
+                            translation: i.transform.translation + translation,
+                            rotation: i.transform.rotation,
+                            scale: i.transform.scale * 1.5,
+                        }
+                    });
+                }
+                // Scale down
+                else if keyboard_input.pressed(KeyCode::Key2){
+                    selected_iter.for_each(|(_s, mut t, i)| {
+                        *t = Transform {
+                            translation: i.transform.translation,
+                            rotation: i.transform.rotation,
+                            scale: i.transform.scale * 0.5,
+                        }
+                    });
+                }
+                // Translate
+                else {
+                    selected_iter.for_each(|(_s, mut t, i)| {
+                        *t = Transform {
+                            translation: i.transform.translation + translation,
+                            rotation: i.transform.rotation,
+                            scale: i.transform.scale,
+                        }
+                    });
+                }
             }
             TransformGizmoInteraction::TranslatePlane { normal, .. } => {
                 let plane_origin = gizmo_origin;
