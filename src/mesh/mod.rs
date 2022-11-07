@@ -62,11 +62,11 @@ pub fn build_gizmo(
     });*/
     // Build the gizmo using the variables above.
     commands
-        .spawn_bundle(TransformGizmoBundle::default())
+        .spawn(TransformGizmoBundle::default())
         .with_children(|parent| {
             // Translation Axes
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: arrow_tail_mesh.clone(),
                     material: gizmo_matl_x.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
@@ -83,7 +83,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: arrow_tail_mesh.clone(),
                     material: gizmo_matl_y.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
@@ -100,7 +100,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: arrow_tail_mesh,
                     material: gizmo_matl_z.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
@@ -119,7 +119,7 @@ pub fn build_gizmo(
 
             // Translation Handles
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
                     material: gizmo_matl_x_sel.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
@@ -136,7 +136,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: plane_mesh.clone(),
                     material: gizmo_matl_x_sel.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
@@ -154,7 +154,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
                     material: gizmo_matl_y_sel.clone(),
                     transform: Transform::from_translation(Vec3::new(0.0, axis_length, 0.0)),
@@ -168,7 +168,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: plane_mesh.clone(),
                     material: gizmo_matl_y_sel.clone(),
                     transform: Transform::from_translation(Vec3::new(
@@ -187,7 +187,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: cone_mesh.clone(),
                     material: gizmo_matl_z_sel.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
@@ -204,7 +204,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: plane_mesh.clone(),
                     material: gizmo_matl_z_sel.clone(),
                     transform: Transform::from_matrix(Mat4::from_rotation_translation(
@@ -223,7 +223,7 @@ pub fn build_gizmo(
                 .insert(RenderLayers::layer(12));
 
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: sphere_mesh.clone(),
                     material: gizmo_matl_v_sel.clone(),
                     ..Default::default()
@@ -239,7 +239,7 @@ pub fn build_gizmo(
 
             // Rotation Arcs
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: rotation_mesh.clone(),
                     material: gizmo_matl_x.clone(),
                     transform: Transform::from_rotation(Quat::from_axis_angle(
@@ -257,7 +257,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: rotation_mesh.clone(),
                     material: gizmo_matl_y.clone(),
                     ..Default::default()
@@ -271,7 +271,7 @@ pub fn build_gizmo(
                 .insert(NotShadowCaster)
                 .insert(RenderLayers::layer(12));
             parent
-                .spawn_bundle(MaterialMeshBundle {
+                .spawn(MaterialMeshBundle {
                     mesh: rotation_mesh.clone(),
                     material: gizmo_matl_z.clone(),
                     transform: Transform::from_rotation(
@@ -291,7 +291,7 @@ pub fn build_gizmo(
 
             // // Rotation Handles
             // parent
-            //     .spawn_bundle(MaterialMeshBundle {
+            //     .spawn(MaterialMeshBundle {
             //         mesh: sphere_mesh.clone(),
             //         material: gizmo_matl_x_sel.clone(),
             //         transform: Transform::from_translation(Vec3::new(
@@ -309,7 +309,7 @@ pub fn build_gizmo(
             //     .insert(RotationGizmo)
             //     .insert(NotShadowCaster);
             // parent
-            //     .spawn_bundle(MaterialMeshBundle {
+            //     .spawn(MaterialMeshBundle {
             //         mesh: sphere_mesh.clone(),
             //         material: gizmo_matl_y_sel.clone(),
             //         transform: Transform::from_translation(Vec3::new(
@@ -327,7 +327,7 @@ pub fn build_gizmo(
             //     .insert(RotationGizmo)
             //     .insert(NotShadowCaster);
             // parent
-            //     .spawn_bundle(MaterialMeshBundle {
+            //     .spawn(MaterialMeshBundle {
             //         mesh: sphere_mesh.clone(),
             //         material: gizmo_matl_z_sel.clone(),
             //         transform: Transform::from_translation(Vec3::new(
@@ -348,7 +348,7 @@ pub fn build_gizmo(
         });
 
     commands
-        .spawn_bundle(Camera3dBundle {
+        .spawn(Camera3dBundle {
             camera_3d: Camera3d {
                 clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
                 depth_load_op: bevy::core_pipeline::core_3d::Camera3dDepthLoadOp::Clear(0.),
