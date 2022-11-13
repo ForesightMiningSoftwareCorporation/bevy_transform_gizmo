@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::PresentMode::AutoNoVsync};
-use bevy_mod_picking::{DefaultHighlighting, DefaultPickingPlugins};
+use bevy_mod_picking::{DefaultPickingPlugins};
 use bevy_transform_gizmo::TransformGizmoPlugin;
 
 fn main() {
