@@ -215,7 +215,7 @@ fn drag_gizmo(
         error!("Not exactly one picking camera.");
         return;
     };
-    let picking_ray = if let Some(ray) = picking_camera.ray() {
+    let picking_ray = if let Some(ray) = picking_camera.get_ray() {
         ray
     } else {
         error!("Picking camera does not have a ray.");
@@ -358,7 +358,7 @@ fn drag_gizmo(
 }
 
 fn hover_gizmo(
-    gizmo_raycast_source: Query<&picking::GizmoPickSource>,
+    gizmo_raycast_source: Query<&GizmoPickSource>,
     mut gizmo_query: Query<(&Children, &mut TransformGizmo, &mut Interaction, &Transform)>,
     hover_query: Query<&TransformGizmoInteraction>,
 ) {
@@ -366,7 +366,7 @@ fn hover_gizmo(
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
             .get_single()
             .expect("Missing gizmo raycast source")
-            .intersect_top()
+            .get_nearest_intersection()
         {
             if *interaction == Interaction::None {
                 for child in children

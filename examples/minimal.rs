@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::PresentMode::AutoNoVsync};
-use bevy_mod_picking::{DefaultPickingPlugins, HighlightablePickingPlugins};
+use bevy_mod_picking::{DefaultHighlighting, DefaultPickingPlugins};
 use bevy_transform_gizmo::TransformGizmoPlugin;
 
 fn main() {
@@ -13,7 +13,6 @@ fn main() {
             ..default()
         }))
         .add_plugins(DefaultPickingPlugins)
-        .add_plugins(HighlightablePickingPlugins)
         .add_plugin(TransformGizmoPlugin::new(
             Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
         )) // Use TransformGizmoPlugin::default() to align to the scene's coordinate system.

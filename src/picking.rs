@@ -3,8 +3,8 @@ use bevy_mod_raycast::RaycastSystem;
 
 use crate::GizmoSystemsEnabledCriteria;
 
-pub type GizmoPickSource = bevy_mod_raycast::RayCastSource<GizmoRaycastSet>;
-pub type PickableGizmo = bevy_mod_raycast::RayCastMesh<GizmoRaycastSet>;
+pub type GizmoPickSource = bevy_mod_raycast::RaycastSource<GizmoRaycastSet>;
+pub type PickableGizmo = bevy_mod_raycast::RaycastMesh<GizmoRaycastSet>;
 
 /// Plugin with all the systems and resources used to raycast against gizmo handles separately from
 /// the `bevy_mod_picking` plugin.
@@ -43,7 +43,7 @@ fn update_gizmo_raycast_with_cursor(
         // Grab the most recent cursor event if it exists:
         if let Some(cursor_latest) = cursor.iter().last() {
             pick_source.cast_method =
-                bevy_mod_raycast::RayCastMethod::Screenspace(cursor_latest.position);
+                bevy_mod_raycast::RaycastMethod::Screenspace(cursor_latest.position);
         }
     }
 }
