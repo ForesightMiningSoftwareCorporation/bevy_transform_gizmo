@@ -1,6 +1,6 @@
 [package]
 name = "bevy_transform_gizmo"
-version = "0.4.0"
+version = "0.5.0"
 authors = [
     "Aevyrie Roessler <aevyrie@gmail.com>",
     "Foresight Mining Software Corporation",
@@ -14,14 +14,12 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.9.0", default-features = false, features = [
-    "render",
-] }
+bevy = { version = "0.9.0", default-features = false, features = ["render"] }
 #bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
 #    "render",
 #] }
 
-bevy_mod_picking = "0.10"
+bevy_mod_picking = "0.11"
 #bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "main" }
 
 bevy_mod_raycast = "0.7"
@@ -40,10 +38,3 @@ bevy = { version = "0.9.0", default-features = false, features = [
 #    "bevy_winit",
 #    "x11",
 #] }
-
-bevy_mod_picking = "0.10.0"
-#bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "main" }
-
-bevy_mod_raycast = "0.7.0"
-#bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast", branch = "main" }
-
