@@ -302,7 +302,6 @@ fn drag_gizmo(
                             rotation: initial_global_transform.transform.rotation,
                             scale: initial_global_transform.transform.scale,
                         };
-                        // M_local = M_parent_world_inv * M
                         let local = inverse_parent * new_transform.compute_matrix();
                         *local_transform = Transform::from_matrix(local);
                     },
@@ -327,14 +326,25 @@ fn drag_gizmo(
                     }
                 };
                 selected_iter.for_each(
-                    |(_selected, _parent, mut local_transform, initial_transform)| {
-                        *local_transform = Transform {
+                    |(_selected, parent, mut local_transform, initial_transform)| {
+                        let parent_global_transorm = match parent {
+                            Some(parent) => match parent_query.get(parent.get()) {
+                                Ok(transform) => *transform,
+                                Err(_) => GlobalTransform::IDENTITY,
+                            },
+                            None => GlobalTransform::IDENTITY,
+                        };
+                        let parent_mat = parent_global_transorm.compute_matrix();
+                        let inverse_parent = parent_mat.inverse();
+                        let new_transform = Transform {
                             translation: initial_transform.transform.translation
                                 + cursor_plane_intersection
                                 - drag_start,
                             rotation: initial_transform.transform.rotation,
                             scale: initial_transform.transform.scale,
-                        }
+                        };
+                        let local = inverse_parent * new_transform.compute_matrix();
+                        *local_transform = Transform::from_matrix(local);
                     },
                 );
             }
@@ -363,16 +373,28 @@ fn drag_gizmo(
                 let angle = det.atan2(dot);
                 let rotation = Quat::from_axis_angle(axis, angle);
                 selected_iter.for_each(
-                    |(_selected, _parent, mut local_transform, initial_transform)| {
+                    |(_selected, parent, mut local_transform, initial_transform)| {
+                        let parent_global_transorm = match parent {
+                            Some(parent) => match parent_query.get(parent.get()) {
+                                Ok(transform) => *transform,
+                                Err(_) => GlobalTransform::IDENTITY,
+                            },
+                            None => GlobalTransform::IDENTITY,
+                        };
+                        let parent_mat = parent_global_transorm.compute_matrix();
+                        let inverse_parent = parent_mat.inverse();
+
                         let worldspace_offset = initial_transform.transform.rotation
                             * initial_transform.rotation_offset;
                         let offset_rotated = rotation * worldspace_offset;
                         let offset = worldspace_offset - offset_rotated;
-                        *local_transform = Transform {
+                        let new_transform = Transform {
                             translation: initial_transform.transform.translation + offset,
                             rotation: rotation * initial_transform.transform.rotation,
                             scale: initial_transform.transform.scale,
-                        }
+                        };
+                        let local = inverse_parent * new_transform.compute_matrix();
+                        *local_transform = Transform::from_matrix(local);
                     },
                 );
             }
