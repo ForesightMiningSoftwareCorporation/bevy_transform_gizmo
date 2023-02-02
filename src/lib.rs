@@ -204,9 +204,15 @@ fn drag_gizmo(
     pick_cam: Query<&PickingCamera>,
     mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_query: Query<
-        (&Selection, &mut Transform, &InitialTransform),
+        (
+            &Selection,
+            Option<&Parent>,
+            &mut Transform,
+            &InitialTransform,
+        ),
         Without<TransformGizmo>,
     >,
+    parent_query: Query<&GlobalTransform>,
     gizmo_query: Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
 ) {
     let picking_camera = if let Some(cam) = pick_cam.iter().last() {
@@ -279,13 +285,28 @@ fn drag_gizmo(
                 let new_handle_vec = cursor_vector.dot(selected_handle_vec.normalize())
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    *t = Transform {
-                        translation: i.transform.translation + translation,
-                        rotation: i.transform.rotation,
-                        scale: i.transform.scale,
-                    }
-                });
+                selected_iter.for_each(
+                    |(_s, parent, mut local_transform, initial_global_transform)| {
+                        let parent_global_transorm = match parent {
+                            Some(parent) => match parent_query.get(parent.get()) {
+                                Ok(transform) => *transform,
+                                Err(_) => GlobalTransform::IDENTITY,
+                            },
+                            None => GlobalTransform::IDENTITY,
+                        };
+                        let parent_mat = parent_global_transorm.compute_matrix();
+                        let inverse_parent = parent_mat.inverse();
+                        let new_transform = Transform {
+                            translation: initial_global_transform.transform.translation
+                                + translation,
+                            rotation: initial_global_transform.transform.rotation,
+                            scale: initial_global_transform.transform.scale,
+                        };
+                        // M_local = M_parent_world_inv * M
+                        let local = inverse_parent * new_transform.compute_matrix();
+                        *local_transform = Transform::from_matrix(local);
+                    },
+                );
             }
             TransformGizmoInteraction::TranslatePlane { normal, .. } => {
                 let plane_origin = gizmo_origin;
@@ -305,14 +326,17 @@ fn drag_gizmo(
                         return;
                     }
                 };
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    *t = Transform {
-                        translation: i.transform.translation + cursor_plane_intersection
-                            - drag_start,
-                        rotation: i.transform.rotation,
-                        scale: i.transform.scale,
-                    }
-                });
+                selected_iter.for_each(
+                    |(_selected, _parent, mut local_transform, initial_transform)| {
+                        *local_transform = Transform {
+                            translation: initial_transform.transform.translation
+                                + cursor_plane_intersection
+                                - drag_start,
+                            rotation: initial_transform.transform.rotation,
+                            scale: initial_transform.transform.scale,
+                        }
+                    },
+                );
             }
             TransformGizmoInteraction::RotateAxis { original: _, axis } => {
                 let rotation_plane = Primitive3d::Plane {
@@ -338,16 +362,19 @@ fn drag_gizmo(
                 let det = axis.dot(drag_start.cross(cursor_vector));
                 let angle = det.atan2(dot);
                 let rotation = Quat::from_axis_angle(axis, angle);
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    let worldspace_offset = i.transform.rotation * i.rotation_offset;
-                    let offset_rotated = rotation * worldspace_offset;
-                    let offset = worldspace_offset - offset_rotated;
-                    *t = Transform {
-                        translation: i.transform.translation + offset,
-                        rotation: rotation * i.transform.rotation,
-                        scale: i.transform.scale,
-                    }
-                });
+                selected_iter.for_each(
+                    |(_selected, _parent, mut local_transform, initial_transform)| {
+                        let worldspace_offset = initial_transform.transform.rotation
+                            * initial_transform.rotation_offset;
+                        let offset_rotated = rotation * worldspace_offset;
+                        let offset = worldspace_offset - offset_rotated;
+                        *local_transform = Transform {
+                            translation: initial_transform.transform.translation + offset,
+                            rotation: rotation * initial_transform.transform.rotation,
+                            scale: initial_transform.transform.scale,
+                        }
+                    },
+                );
             }
             TransformGizmoInteraction::ScaleAxis {
                 original: _,
