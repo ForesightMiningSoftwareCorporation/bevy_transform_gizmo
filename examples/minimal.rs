@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PresentMode::AutoNoVsync};
 use bevy_mod_picking::DefaultPickingPlugins;
-use bevy_transform_gizmo::TransformGizmoPlugin;
+use bevy_transform_gizmo::{GizmoColors, TransformGizmoPlugin};
 
 fn main() {
     App::new()
@@ -13,11 +13,19 @@ fn main() {
             ..default()
         }))
         .add_plugins(DefaultPickingPlugins)
-        .add_plugin(TransformGizmoPlugin::new(
-            Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
-                                         // Use TransformGizmoPlugin::default() to align to the
-                                         // scene's coordinate system.
-        ))
+        .add_plugin(
+            TransformGizmoPlugin::new(
+                Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
+                                             // Use TransformGizmoPlugin::default() to align to the
+                                             // scene's coordinate system.
+            ),
+            //.with_colors(GizmoColors { // Optionally configure colors
+            //    x: Color::PINK,
+            //    y: Color::YELLOW_GREEN,
+            //    z: Color::MIDNIGHT_BLUE,
+            //    ..Default::default()
+            //}),
+        )
         .add_startup_system(setup)
         .run();
 }

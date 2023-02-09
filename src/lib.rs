@@ -61,6 +61,27 @@ pub struct GizmoSettings {
     /// coordinate system.
     pub alignment_rotation: Quat,
     pub allow_rotation: bool,
+    pub colors: GizmoColors,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct GizmoColors {
+    pub x: Color,
+    pub y: Color,
+    pub z: Color,
+    pub v: Color,
+}
+
+impl Default for GizmoColors {
+    fn default() -> Self {
+        let (s, l) = (0.8, 0.6);
+        GizmoColors {
+            x: Color::hsl(0.0, s, l),
+            y: Color::hsl(120.0, s, l),
+            z: Color::hsl(240.0, s, l),
+            v: Color::hsl(0.0, 0.0, l),
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone)]
@@ -68,10 +89,21 @@ pub struct TransformGizmoPlugin {
     // Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     // coordinate system.
     alignment_rotation: Quat,
+    colors: GizmoColors,
 }
 impl TransformGizmoPlugin {
     pub fn new(alignment_rotation: Quat) -> Self {
-        TransformGizmoPlugin { alignment_rotation }
+        TransformGizmoPlugin {
+            alignment_rotation,
+            colors: GizmoColors::default(),
+        }
+    }
+
+    pub fn with_colors(self, colors: GizmoColors) -> Self {
+        TransformGizmoPlugin {
+            alignment_rotation: self.alignment_rotation,
+            colors,
+        }
     }
 }
 impl Plugin for TransformGizmoPlugin {
@@ -82,9 +114,11 @@ impl Plugin for TransformGizmoPlugin {
             Shader::from_wgsl(include_str!("../assets/gizmo_material.wgsl")),
         );
         let alignment_rotation = self.alignment_rotation;
+        let colors = self.colors;
         app.insert_resource(GizmoSettings {
             alignment_rotation,
             allow_rotation: true,
+            colors,
         })
         .insert_resource(GizmoSystemsEnabled(true))
         .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
