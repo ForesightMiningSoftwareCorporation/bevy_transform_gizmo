@@ -6,7 +6,7 @@ use bevy::{
 use bevy_mod_picking::{self, PickingBlocker, PickingCamera, Primitive3d, Selection};
 use bevy_mod_raycast::RaycastSystem;
 use gizmo_material::GizmoMaterial;
-use mesh::{RotationGizmo, ViewTranslateGizmo};
+use mesh::{GizmoHighlighter, RotationGizmo, ViewTranslateGizmo};
 use normalization::*;
 
 mod gizmo_material;
@@ -395,6 +395,9 @@ fn hover_gizmo(
     gizmo_raycast_source: Query<&GizmoPickSource>,
     mut gizmo_query: Query<(&Children, &mut TransformGizmo, &mut Interaction, &Transform)>,
     hover_query: Query<&TransformGizmoInteraction>,
+    mut highlighter: ResMut<GizmoHighlighter>,
+    mut commands: Commands,
+    mouse_button_input: Res<Input<MouseButton>>,
 ) {
     for (children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
@@ -402,6 +405,11 @@ fn hover_gizmo(
             .expect("Missing gizmo raycast source")
             .get_nearest_intersection()
         {
+            if !highlighter.is_highlighted(topmost_gizmo_entity)
+                && !mouse_button_input.pressed(MouseButton::Left)
+            {
+                highlighter.highlight(&mut commands, topmost_gizmo_entity);
+            }
             if *interaction == Interaction::None {
                 for child in children
                     .iter()
@@ -414,6 +422,9 @@ fn hover_gizmo(
                 }
             }
         } else if *interaction == Interaction::Hovered {
+            if !mouse_button_input.pressed(MouseButton::Left) {
+                highlighter.unhighlight(&mut commands);
+            }
             *interaction = Interaction::None
         }
     }
@@ -436,6 +447,7 @@ fn grab_gizmo(
         Option<&RotationOriginOffset>,
     )>,
     initial_transform_query: Query<Entity, With<InitialTransform>>,
+    mut highlighter: ResMut<GizmoHighlighter>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
         for (mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
@@ -464,6 +476,7 @@ fn grab_gizmo(
     } else if mouse_button_input.just_released(MouseButton::Left) {
         for (mut gizmo, mut interaction, transform) in gizmo_query.iter_mut() {
             *interaction = Interaction::None;
+            highlighter.unhighlight(&mut commands);
             if let (Some(from), Some(interaction)) =
                 (gizmo.initial_transform, gizmo.current_interaction())
             {
