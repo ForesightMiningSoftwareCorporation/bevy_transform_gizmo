@@ -6,7 +6,7 @@ use bevy::{
 use bevy_mod_picking::{self, PickingBlocker, PickingCamera, Primitive3d, Selection};
 use bevy_mod_raycast::RaycastSystem;
 use gizmo_material::GizmoMaterial;
-use mesh::{RotationGizmo, ViewTranslateGizmo};
+use mesh::{GizmoHighlighter, RotationGizmo, ViewTranslateGizmo};
 use normalization::*;
 
 mod gizmo_material;
@@ -61,6 +61,27 @@ pub struct GizmoSettings {
     /// coordinate system.
     pub alignment_rotation: Quat,
     pub allow_rotation: bool,
+    pub colors: GizmoColors,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct GizmoColors {
+    pub x: Color,
+    pub y: Color,
+    pub z: Color,
+    pub v: Color,
+}
+
+impl Default for GizmoColors {
+    fn default() -> Self {
+        let (s, l) = (0.8, 0.6);
+        GizmoColors {
+            x: Color::hsl(0.0, s, l),
+            y: Color::hsl(120.0, s, l),
+            z: Color::hsl(240.0, s, l),
+            v: Color::hsl(0.0, 0.0, l),
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone)]
@@ -68,10 +89,21 @@ pub struct TransformGizmoPlugin {
     // Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
     // coordinate system.
     alignment_rotation: Quat,
+    colors: GizmoColors,
 }
 impl TransformGizmoPlugin {
     pub fn new(alignment_rotation: Quat) -> Self {
-        TransformGizmoPlugin { alignment_rotation }
+        TransformGizmoPlugin {
+            alignment_rotation,
+            colors: GizmoColors::default(),
+        }
+    }
+
+    pub fn with_colors(self, colors: GizmoColors) -> Self {
+        TransformGizmoPlugin {
+            alignment_rotation: self.alignment_rotation,
+            colors,
+        }
     }
 }
 impl Plugin for TransformGizmoPlugin {
@@ -82,9 +114,11 @@ impl Plugin for TransformGizmoPlugin {
             Shader::from_wgsl(include_str!("../assets/gizmo_material.wgsl")),
         );
         let alignment_rotation = self.alignment_rotation;
+        let colors = self.colors;
         app.insert_resource(GizmoSettings {
             alignment_rotation,
             allow_rotation: true,
+            colors,
         })
         .insert_resource(GizmoSystemsEnabled(true))
         .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
@@ -361,6 +395,9 @@ fn hover_gizmo(
     gizmo_raycast_source: Query<&GizmoPickSource>,
     mut gizmo_query: Query<(&Children, &mut TransformGizmo, &mut Interaction, &Transform)>,
     hover_query: Query<&TransformGizmoInteraction>,
+    mut highlighter: ResMut<GizmoHighlighter>,
+    mut commands: Commands,
+    mouse_button_input: Res<Input<MouseButton>>,
 ) {
     for (children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
@@ -368,6 +405,11 @@ fn hover_gizmo(
             .expect("Missing gizmo raycast source")
             .get_nearest_intersection()
         {
+            if !highlighter.is_highlighted(topmost_gizmo_entity)
+                && !mouse_button_input.pressed(MouseButton::Left)
+            {
+                highlighter.highlight(&mut commands, topmost_gizmo_entity);
+            }
             if *interaction == Interaction::None {
                 for child in children
                     .iter()
@@ -380,6 +422,9 @@ fn hover_gizmo(
                 }
             }
         } else if *interaction == Interaction::Hovered {
+            if !mouse_button_input.pressed(MouseButton::Left) {
+                highlighter.unhighlight(&mut commands);
+            }
             *interaction = Interaction::None
         }
     }
@@ -402,6 +447,7 @@ fn grab_gizmo(
         Option<&RotationOriginOffset>,
     )>,
     initial_transform_query: Query<Entity, With<InitialTransform>>,
+    mut highlighter: ResMut<GizmoHighlighter>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
         for (mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
@@ -430,6 +476,7 @@ fn grab_gizmo(
     } else if mouse_button_input.just_released(MouseButton::Left) {
         for (mut gizmo, mut interaction, transform) in gizmo_query.iter_mut() {
             *interaction = Interaction::None;
+            highlighter.unhighlight(&mut commands);
             if let (Some(from), Some(interaction)) =
                 (gizmo.initial_transform, gizmo.current_interaction())
             {
