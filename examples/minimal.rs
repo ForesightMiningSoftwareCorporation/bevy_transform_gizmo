@@ -8,9 +8,10 @@ use bevy_transform_gizmo::TransformGizmoPlugin;
 fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
+        .insert_resource(ClearColor(Color::BLACK))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                present_mode: PresentMode::AutoVsync,
+                present_mode: PresentMode::Immediate,
                 ..default()
             }),
             ..default()
@@ -35,7 +36,7 @@ fn setup(
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
-            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
             ..Default::default()
         },
         bevy_mod_picking::PickableBundle::default(),
@@ -45,7 +46,7 @@ fn setup(
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
             ..Default::default()
         },
