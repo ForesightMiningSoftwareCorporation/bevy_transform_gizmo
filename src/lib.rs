@@ -360,7 +360,8 @@ fn hover_gizmo(
             .expect("Missing gizmo raycast source")
             .get_nearest_intersection()
         {
-            if *interaction == Interaction::None {
+            // Only update the gizmo state if it isn't being clicked (dragged) currently.
+            if *interaction != Interaction::Clicked {
                 for child in children
                     .iter()
                     .filter(|entity| **entity == topmost_gizmo_entity)
