@@ -1,15 +1,18 @@
-use bevy::{prelude::*, window::PresentMode::AutoNoVsync};
+use bevy::{
+    prelude::*,
+    window::PresentMode::{self},
+};
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_transform_gizmo::TransformGizmoPlugin;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
-                present_mode: AutoNoVsync,
-                ..Default::default()
-            },
+            primary_window: Some(Window {
+                present_mode: PresentMode::AutoVsync,
+                ..default()
+            }),
             ..default()
         }))
         .add_plugins(DefaultPickingPlugins)
@@ -31,7 +34,7 @@ fn setup(
     // plane
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
+            mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..Default::default()
         },

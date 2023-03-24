@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_raycast::RaycastSystem;
 
-use crate::GizmoSystemsEnabledCriteria;
+use crate::{GizmoSettings, TransformGizmoSystem};
 
 pub type GizmoPickSource = bevy_mod_raycast::RaycastSource<GizmoRaycastSet>;
 pub type PickableGizmo = bevy_mod_raycast::RaycastMesh<GizmoRaycastSet>;
@@ -11,27 +11,26 @@ pub type PickableGizmo = bevy_mod_raycast::RaycastMesh<GizmoRaycastSet>;
 pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set_to_stage(
-            CoreStage::PreUpdate,
-            SystemSet::new()
-                .with_run_criteria(GizmoSystemsEnabledCriteria)
-                .with_system(
-                    bevy_mod_raycast::build_rays::<GizmoRaycastSet>
-                        .label(RaycastSystem::BuildRays::<GizmoRaycastSet>),
-                )
-                .with_system(
-                    bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
-                        .label(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>)
-                        .after(RaycastSystem::BuildRays::<GizmoRaycastSet>),
-                )
-                .with_system(
-                    update_gizmo_raycast_with_cursor
-                        .before(RaycastSystem::BuildRays::<GizmoRaycastSet>),
-                ),
+        app.add_systems(
+            (
+                update_gizmo_raycast_with_cursor,
+                bevy_mod_raycast::build_rays::<GizmoRaycastSet>
+                    .in_set(RaycastSystem::BuildRays::<GizmoRaycastSet>),
+                bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
+                    .in_set(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
+            )
+                .chain()
+                .in_set(TransformGizmoSystem::RaycastSet),
+        )
+        .configure_set(
+            TransformGizmoSystem::RaycastSet
+                .run_if(|settings: Res<GizmoSettings>| settings.enabled)
+                .in_base_set(CoreSet::PreUpdate),
         );
     }
 }
 
+#[derive(Reflect, Clone)]
 pub struct GizmoRaycastSet;
 
 /// Update the gizmo's raycasting source with the current mouse position.
