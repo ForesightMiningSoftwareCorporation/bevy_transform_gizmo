@@ -43,14 +43,14 @@ You will need to add the transform gizmo plugin, as well as make sure you have a
 Next, you will need to mark your picking camera as your gizmo camera:
 
 ```rust
-.insert_bundle(bevy_mod_picking::PickingCameraBundle::default())
+.insert(bevy_mod_picking::PickingCameraBundle::default())
 .insert(bevy_transform_gizmo::GizmoPickSource::default());
 ```
 
 Finally, mark any meshes you want to be transformed with the gizmo; note they must also be selectable in the picking plugin:
 
 ```rust
-.insert_bundle(bevy_mod_picking::PickableBundle::default())
+.insert(bevy_mod_picking::PickableBundle::default())
 .insert(bevy_transform_gizmo::GizmoTransformable);
 ```
 
