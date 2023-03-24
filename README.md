@@ -3,9 +3,9 @@
 # Bevy Transform Gizmo
 
 **Simple 3D transform gizmo for bevy**
-    
-https://user-images.githubusercontent.com/2632925/183512583-a8d2b2de-4997-45bb-9565-0a86c06cda90.mp4
-    
+
+https://user-images.githubusercontent.com/2632925/227469248-726b21c8-5308-49f0-9b04-e567833774e1.mp4
+
 [![crates.io](https://img.shields.io/crates/v/bevy_transform_gizmo)](https://crates.io/crates/bevy_transform_gizmo)
 [![docs.rs](https://docs.rs/bevy_transform_gizmo/badge.svg)](https://docs.rs/bevy_transform_gizmo)
 [![CI](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/workflows/CI/badge.svg?branch=main)](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/actions?query=workflow%3A%22CI%22+branch%3Amain)
