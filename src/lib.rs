@@ -1,8 +1,8 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
-use bevy_mod_picking::{self, PickingBlocker, PickingCamera, Primitive3d, Selection};
-use bevy_mod_raycast::RaycastSystem;
+use bevy_mod_picking::selection::PickSelection;
+use bevy_mod_raycast::{Primitive3d, RaycastSource, RaycastSystem};
 use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};
 use normalization::*;
@@ -134,7 +134,6 @@ impl Plugin for TransformGizmoPlugin {
 pub struct TransformGizmoBundle {
     gizmo: TransformGizmo,
     interaction: Interaction,
-    picking_blocker: PickingBlocker,
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visibility,
@@ -147,7 +146,6 @@ impl Default for TransformGizmoBundle {
         TransformGizmoBundle {
             transform: Transform::from_translation(Vec3::splat(f32::MIN)),
             interaction: Interaction::None,
-            picking_blocker: PickingBlocker,
             visible: Visibility::Hidden,
             computed_visibility: ComputedVisibility::default(),
             gizmo: TransformGizmo::default(),
@@ -193,10 +191,10 @@ struct InitialTransform {
 /// Updates the position of the gizmo and selected meshes while the gizmo is being dragged.
 #[allow(clippy::type_complexity)]
 fn drag_gizmo(
-    pick_cam: Query<&PickingCamera>,
+    pick_cam: Query<&RaycastSource<GizmoRaycastSet>>,
     mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_query: Query<
-        (&Selection, &mut Transform, &InitialTransform),
+        (&PickSelection, &mut Transform, &InitialTransform),
         Without<TransformGizmo>,
     >,
     gizmo_query: Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
@@ -207,6 +205,7 @@ fn drag_gizmo(
         error!("Not exactly one picking camera.");
         return;
     };
+
     let picking_ray = if let Some(ray) = picking_camera.get_ray() {
         ray
     } else {
@@ -236,7 +235,7 @@ fn drag_gizmo(
             origin
         }
     };
-    let selected_iter = transform_query.iter_mut().filter(|(s, ..)| s.selected());
+    let selected_iter = transform_query.iter_mut().filter(|(s, ..)| s.is_selected);
     if let Some(interaction) = gizmo.current_interaction {
         if gizmo.initial_transform.is_none() {
             gizmo.initial_transform = Some(gizmo_transform);
@@ -389,7 +388,7 @@ fn grab_gizmo(
     mut gizmo_events: EventWriter<TransformGizmoEvent>,
     mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &GlobalTransform)>,
     selected_items_query: Query<(
-        &Selection,
+        &PickSelection,
         &GlobalTransform,
         Entity,
         Option<&RotationOriginOffset>,
@@ -404,7 +403,7 @@ fn grab_gizmo(
                 for (selection, transform, entity, rotation_origin_offset) in
                     selected_items_query.iter()
                 {
-                    if selection.selected() {
+                    if selection.is_selected {
                         commands.entity(entity).insert(InitialTransform {
                             transform: transform.compute_transform(),
                             rotation_offset: rotation_origin_offset
@@ -445,7 +444,11 @@ fn place_gizmo(
     plugin_settings: Res<GizmoSettings>,
     mut queries: ParamSet<(
         Query<
-            (&Selection, &GlobalTransform, Option<&RotationOriginOffset>),
+            (
+                &PickSelection,
+                &GlobalTransform,
+                Option<&RotationOriginOffset>,
+            ),
             With<GizmoTransformable>,
         >,
         Query<(&mut GlobalTransform, &mut Transform, &mut Visibility), With<TransformGizmo>>,
@@ -454,7 +457,7 @@ fn place_gizmo(
     let selected: Vec<_> = queries
         .p0()
         .iter()
-        .filter(|(s, ..)| s.selected())
+        .filter(|(s, ..)| s.is_selected)
         .map(|(_s, t, offset)| {
             t.translation()
                 + offset

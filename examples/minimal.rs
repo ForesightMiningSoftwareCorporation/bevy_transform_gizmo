@@ -32,16 +32,20 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // plane
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
-            ..Default::default()
-        },
-        bevy_mod_picking::PickableBundle::default(),
-        bevy_transform_gizmo::GizmoTransformable,
-    ));
+    // plane, can't be selected
+    commands
+        .spawn((
+            PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
+                material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
+                ..Default::default()
+            },
+            bevy_mod_picking::PickableBundle::default(),
+            bevy_mod_picking::prelude::RaycastPickTarget::default(), // <- Needed for the raycast backend.
+            bevy_transform_gizmo::GizmoTransformable,
+        ))
+        .remove::<bevy_mod_picking::selection::PickSelection>(); // <- Removing this removes the entity's ability to be selected.
+
     // cube
     commands.spawn((
         PbrBundle {
@@ -51,20 +55,23 @@ fn setup(
             ..Default::default()
         },
         bevy_mod_picking::PickableBundle::default(),
+        bevy_mod_picking::prelude::RaycastPickTarget::default(), // <- Needed for the raycast backend.
         bevy_transform_gizmo::GizmoTransformable,
     ));
+
     // light
     commands.spawn(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..Default::default()
     });
+
     // camera
     commands.spawn((
         Camera3dBundle {
             transform: Transform::from_xyz(2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         },
-        bevy_mod_picking::PickingCameraBundle::default(),
+        bevy_mod_picking::prelude::RaycastPickCamera::default(),
         bevy_transform_gizmo::GizmoPickSource::default(),
     ));
 }
