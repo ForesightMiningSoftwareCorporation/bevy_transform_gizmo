@@ -44,7 +44,7 @@ fn setup(
         ))
         .insert(bevy_transform_gizmo::PickingBlocker);
 
-    // cube
+    // cube with child
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
@@ -53,7 +53,18 @@ fn setup(
             ..Default::default()
         },
         bevy_transform_gizmo::GizmoTransformable,
-    ));
+    ))
+    .with_children(|parent| {
+        parent.spawn((
+            PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                material: materials.add(Color::rgb(0.6, 0.6, 0.6).into()),
+                transform: Transform::from_xyz(0.0, 1.0, 0.0),
+                ..Default::default()
+            },
+            bevy_transform_gizmo::GizmoTransformable,
+        ));
+    });
 
     // light
     commands.spawn(PointLightBundle {
