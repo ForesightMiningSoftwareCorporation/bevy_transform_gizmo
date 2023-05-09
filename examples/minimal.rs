@@ -40,11 +40,9 @@ fn setup(
                 material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
                 ..Default::default()
             },
-            bevy_mod_picking::PickableBundle::default(),
-            bevy_mod_picking::prelude::RaycastPickTarget::default(), // <- Needed for the raycast backend.
             bevy_transform_gizmo::GizmoTransformable,
         ))
-        .remove::<bevy_mod_picking::selection::PickSelection>(); // <- Removing this removes the entity's ability to be selected.
+        .insert(bevy_transform_gizmo::PickingBlocker);
 
     // cube
     commands.spawn((
@@ -54,8 +52,6 @@ fn setup(
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
             ..Default::default()
         },
-        bevy_mod_picking::PickableBundle::default(),
-        bevy_mod_picking::prelude::RaycastPickTarget::default(), // <- Needed for the raycast backend.
         bevy_transform_gizmo::GizmoTransformable,
     ));
 

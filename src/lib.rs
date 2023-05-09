@@ -46,6 +46,9 @@ pub struct GizmoTransformable;
 #[derive(Component, Default, Clone, Debug)]
 pub struct InternalGizmoCamera;
 
+#[derive(Component, Default, Clone, Debug)]
+pub struct PickingBlocker;
+
 #[derive(Resource, Clone, Debug)]
 pub struct GizmoSettings {
     pub enabled: bool,
@@ -127,6 +130,12 @@ impl Plugin for TransformGizmoPlugin {
 
         app.add_startup_system(mesh::build_gizmo)
             .add_system(place_gizmo.in_base_set(StartupSet::PostStartup));
+
+        app.add_systems((
+            process_new_transformable.before(apply_picking_blocker),            
+            apply_picking_blocker.after(process_new_transformable),    
+        ));
+
     }
 }
 
@@ -134,6 +143,7 @@ impl Plugin for TransformGizmoPlugin {
 pub struct TransformGizmoBundle {
     gizmo: TransformGizmo,
     interaction: Interaction,
+    picking_blocker: PickingBlocker,
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visibility,
@@ -146,6 +156,7 @@ impl Default for TransformGizmoBundle {
         TransformGizmoBundle {
             transform: Transform::from_translation(Vec3::splat(f32::MIN)),
             interaction: Interaction::None,
+            picking_blocker: PickingBlocker,
             visible: Visibility::Hidden,
             computed_visibility: ComputedVisibility::default(),
             gizmo: TransformGizmo::default(),
@@ -611,3 +622,35 @@ fn gizmo_cam_copy_settings(
         *proj = main_proj.clone();
     }
 }
+
+fn apply_picking_blocker (
+    mut commands: Commands,
+    entities: Query<Entity, With<PickingBlocker>>,    
+) {
+    for entity in entities.iter() {
+        if let Some(mut entity_commands) = commands.get_entity(entity) {
+            entity_commands.remove::<PickingBlocker>();
+            entity_commands.remove::<bevy_mod_picking::selection::PickSelection>();
+        } 
+    } 
+}
+
+fn process_new_transformable (
+    mut commands: Commands,
+    new_transformable_entities: Query<Entity, Added<GizmoTransformable>>,    
+    entities_with_blocker: Query<&PickingBlocker>,  
+) {
+    for entity in new_transformable_entities.iter() {
+        if let Some(mut entity_commands) = commands.get_entity(entity) {
+            entity_commands.insert(bevy_mod_picking::PickableBundle::default());
+            entity_commands.insert(bevy_mod_picking::prelude::RaycastPickTarget::default());
+
+            if entities_with_blocker.contains(entity) {
+                entity_commands.remove::<PickingBlocker>();
+                entity_commands.remove::<bevy_mod_picking::selection::PickSelection>();
+            }
+        } 
+    }
+}
+
+
