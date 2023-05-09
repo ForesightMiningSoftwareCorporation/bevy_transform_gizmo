@@ -133,7 +133,8 @@ impl Plugin for TransformGizmoPlugin {
 
         app.add_systems((
             process_new_transformable.before(apply_picking_blocker),            
-            apply_picking_blocker.after(process_new_transformable),    
+            apply_picking_blocker.after(process_new_transformable),   
+            process_new_camera, 
         ));
 
     }
@@ -649,6 +650,17 @@ fn process_new_transformable (
                 entity_commands.remove::<PickingBlocker>();
                 entity_commands.remove::<bevy_mod_picking::selection::PickSelection>();
             }
+        } 
+    }
+}
+
+fn process_new_camera (
+    mut commands: Commands,
+    new_transformable_camera: Query<Entity, Added<GizmoPickSource>>,    
+) {
+    for entity in new_transformable_camera.iter() {
+        if let Some(mut entity_commands) = commands.get_entity(entity) {
+            entity_commands.insert(bevy_mod_picking::prelude::RaycastPickCamera::default());
         } 
     }
 }
