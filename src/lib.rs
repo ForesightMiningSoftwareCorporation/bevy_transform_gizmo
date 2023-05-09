@@ -400,7 +400,7 @@ fn grab_gizmo(
     mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &GlobalTransform)>,
     selected_items_query: Query<(
         &PickSelection,
-        &GlobalTransform,
+        &Transform,
         Entity,
         Option<&RotationOriginOffset>,
     )>,
@@ -416,7 +416,7 @@ fn grab_gizmo(
                 {
                     if selection.is_selected {
                         commands.entity(entity).insert(InitialTransform {
-                            transform: transform.compute_transform(),
+                            transform: transform.clone(),
                             rotation_offset: rotation_origin_offset
                                 .map(|offset| offset.0)
                                 .unwrap_or(Vec3::ZERO),
