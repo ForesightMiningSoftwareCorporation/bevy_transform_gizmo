@@ -656,8 +656,8 @@ fn process_new_transformable (
 
 fn process_new_camera (
     mut commands: Commands,
-//    new_transformable_camera: Query<Entity, Added<GizmoPickSource>>,    
-    new_transformable_camera: Query<Entity, (With<GizmoPickSource>, With<Camera>, Without<bevy_mod_picking::prelude::RaycastPickCamera>)>,   
+    new_transformable_camera: Query<Entity, Added<GizmoPickSource>>,    
+//    new_transformable_camera: Query<Entity, (With<GizmoPickSource>, With<Camera>, Without<bevy_mod_picking::prelude::RaycastPickCamera>)>,   
 ) {
     for entity in new_transformable_camera.iter() {
         if let Some(mut entity_commands) = commands.get_entity(entity) {
