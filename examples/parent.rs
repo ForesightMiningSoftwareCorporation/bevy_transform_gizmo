@@ -45,26 +45,27 @@ fn setup(
         .insert(bevy_transform_gizmo::PickingBlocker);
 
     // cube with child
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
-            transform: Transform::from_xyz(0.0, 0.5, 0.0),
-            ..Default::default()
-        },
-        bevy_transform_gizmo::GizmoTransformable,
-    ))
-    .with_children(|parent| {
-        parent.spawn((
+    commands
+        .spawn((
             PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                material: materials.add(Color::rgb(0.6, 0.6, 0.6).into()),
-                transform: Transform::from_xyz(0.0, 1.0, 0.0),
+                material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
+                transform: Transform::from_xyz(0.0, 0.5, 0.0),
                 ..Default::default()
             },
             bevy_transform_gizmo::GizmoTransformable,
-        ));
-    });
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    material: materials.add(Color::rgb(0.6, 0.6, 0.6).into()),
+                    transform: Transform::from_xyz(0.0, 1.0, 0.0),
+                    ..Default::default()
+                },
+                bevy_transform_gizmo::GizmoTransformable,
+            ));
+        });
 
     // light
     commands.spawn(PointLightBundle {
