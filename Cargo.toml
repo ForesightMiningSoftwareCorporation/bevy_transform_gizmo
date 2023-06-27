@@ -1,6 +1,6 @@
 [package]
 name = "bevy_transform_gizmo"
-version = "0.6.0"
+version = "0.7.0"
 authors = [
     "Aevyrie Roessler <aevyrie@gmail.com>",
     "Foresight Mining Software Corporation",
@@ -18,7 +18,9 @@ bevy = { version = "0.10.1", default-features = false, features = [
     "bevy_render",
     "bevy_core_pipeline",
 ] }
-bevy_mod_picking = { version = "0.13", default-features = false, features = ["selection"] }
+bevy_mod_picking = { version = "0.13", default-features = false, features = [
+    "selection",
+] }
 bevy_mod_raycast = "0.8"
 
 [dependencies.naga]
