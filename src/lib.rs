@@ -210,13 +210,13 @@ fn drag_gizmo(
     let picking_camera = if let Some(cam) = pick_cam.iter().last() {
         cam
     } else {
-        error!("Not exactly one picking camera.");
+        // Not exactly one picking camera.
         return;
     };
     let picking_ray = if let Some(ray) = picking_camera.get_ray() {
         ray
     } else {
-        error!("Picking camera does not have a ray.");
+        // Picking camera does not have a ray.
         return;
     };
     // Gizmo handle should project mouse motion onto the axis of the handle. Perpendicular motion
