@@ -1,8 +1,13 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
-use bevy_mod_picking::{self, PickingBlocker, PickingCamera, Primitive3d, Selection};
-use bevy_mod_raycast::RaycastSystem;
+use bevy_mod_picking::{
+    backend::{HitData, PointerHits},
+    picking_core::PickSet,
+    prelude::PointerId,
+    selection::{NoDeselect, PickSelection},
+};
+use bevy_mod_raycast::{Primitive3d, RaycastSystem};
 use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};
 use normalization::*;
@@ -91,6 +96,7 @@ impl Plugin for TransformGizmoPlugin {
                 update_gizmo_settings.in_set(TransformGizmoSystem::UpdateSettings),
                 hover_gizmo
                     .in_set(TransformGizmoSystem::Hover)
+                    .in_set(PickSet::Backend)
                     .after(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
                 grab_gizmo.in_set(TransformGizmoSystem::Grab),
             )
@@ -134,7 +140,7 @@ impl Plugin for TransformGizmoPlugin {
 pub struct TransformGizmoBundle {
     gizmo: TransformGizmo,
     interaction: Interaction,
-    picking_blocker: PickingBlocker,
+    picking_blocker: NoDeselect,
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visibility,
@@ -147,7 +153,7 @@ impl Default for TransformGizmoBundle {
         TransformGizmoBundle {
             transform: Transform::from_translation(Vec3::splat(f32::MIN)),
             interaction: Interaction::None,
-            picking_blocker: PickingBlocker,
+            picking_blocker: NoDeselect,
             visible: Visibility::Hidden,
             computed_visibility: ComputedVisibility::default(),
             gizmo: TransformGizmo::default(),
@@ -193,10 +199,10 @@ struct InitialTransform {
 /// Updates the position of the gizmo and selected meshes while the gizmo is being dragged.
 #[allow(clippy::type_complexity)]
 fn drag_gizmo(
-    pick_cam: Query<&PickingCamera>,
+    pick_cam: Query<&GizmoPickSource>,
     mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_query: Query<
-        (&Selection, &mut Transform, &InitialTransform),
+        (&PickSelection, &mut Transform, &InitialTransform),
         Without<TransformGizmo>,
     >,
     gizmo_query: Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
@@ -236,7 +242,7 @@ fn drag_gizmo(
             origin
         }
     };
-    let selected_iter = transform_query.iter_mut().filter(|(s, ..)| s.selected());
+    let selected_iter = transform_query.iter_mut().filter(|(s, ..)| s.is_selected);
     if let Some(interaction) = gizmo.current_interaction {
         if gizmo.initial_transform.is_none() {
             gizmo.initial_transform = Some(gizmo_transform);
@@ -350,16 +356,23 @@ fn drag_gizmo(
 }
 
 fn hover_gizmo(
-    gizmo_raycast_source: Query<&GizmoPickSource>,
-    mut gizmo_query: Query<(&Children, &mut TransformGizmo, &mut Interaction, &Transform)>,
+    gizmo_raycast_source: Query<(Entity, &GizmoPickSource)>,
+    mut gizmo_query: Query<(
+        Entity,
+        &Children,
+        &mut TransformGizmo,
+        &mut Interaction,
+        &Transform,
+    )>,
     hover_query: Query<&TransformGizmoInteraction>,
+    mut hits: EventWriter<PointerHits>,
 ) {
-    for (children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
-        if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source
+    for (gizmo_entity, children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
+        let (camera, gizmo_raycast_source) = gizmo_raycast_source
             .get_single()
-            .expect("Missing gizmo raycast source")
-            .get_nearest_intersection()
-        {
+            .expect("Missing gizmo raycast source");
+
+        if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source.get_nearest_intersection() {
             // Only update the gizmo state if it isn't being clicked (dragged) currently.
             if *interaction != Interaction::Clicked {
                 for child in children
@@ -375,6 +388,21 @@ fn hover_gizmo(
         } else if *interaction == Interaction::Hovered {
             *interaction = Interaction::None
         }
+
+        if !matches!(*interaction, Interaction::None) {
+            // Tell picking backend we're hovering the gizmo, so the `NoDeselect` component takes effect.
+            let data = HitData {
+                camera,
+                depth: 0.,
+                position: None,
+                normal: None,
+            };
+            hits.send(PointerHits {
+                pointer: PointerId::Mouse,
+                picks: vec![(gizmo_entity, data)],
+                order: 1000,
+            });
+        }
     }
 }
 
@@ -389,7 +417,7 @@ fn grab_gizmo(
     mut gizmo_events: EventWriter<TransformGizmoEvent>,
     mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &GlobalTransform)>,
     selected_items_query: Query<(
-        &Selection,
+        &PickSelection,
         &GlobalTransform,
         Entity,
         Option<&RotationOriginOffset>,
@@ -404,7 +432,7 @@ fn grab_gizmo(
                 for (selection, transform, entity, rotation_origin_offset) in
                     selected_items_query.iter()
                 {
-                    if selection.selected() {
+                    if selection.is_selected {
                         commands.entity(entity).insert(InitialTransform {
                             transform: transform.compute_transform(),
                             rotation_offset: rotation_origin_offset
@@ -445,7 +473,11 @@ fn place_gizmo(
     plugin_settings: Res<GizmoSettings>,
     mut queries: ParamSet<(
         Query<
-            (&Selection, &GlobalTransform, Option<&RotationOriginOffset>),
+            (
+                &PickSelection,
+                &GlobalTransform,
+                Option<&RotationOriginOffset>,
+            ),
             With<GizmoTransformable>,
         >,
         Query<(&mut GlobalTransform, &mut Transform, &mut Visibility), With<TransformGizmo>>,
@@ -454,7 +486,7 @@ fn place_gizmo(
     let selected: Vec<_> = queries
         .p0()
         .iter()
-        .filter(|(s, ..)| s.selected())
+        .filter(|(s, ..)| s.is_selected)
         .map(|(_s, t, offset)| {
             t.translation()
                 + offset
