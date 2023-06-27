@@ -1,7 +1,6 @@
 use bevy::{prelude::*, render::camera::Camera, transform::TransformSystem};
-use bevy_mod_picking::PickingCamera;
 
-use crate::{GizmoSettings, TransformGizmoSystem};
+use crate::{GizmoPickSource, GizmoSettings, TransformGizmoSystem};
 
 pub struct Ui3dNormalization;
 impl Plugin for Ui3dNormalization {
@@ -40,7 +39,7 @@ impl Normalize3d {
 #[allow(clippy::type_complexity)]
 pub fn normalize(
     mut query: ParamSet<(
-        Query<(&GlobalTransform, &Camera), With<PickingCamera>>,
+        Query<(&GlobalTransform, &Camera), With<GizmoPickSource>>,
         Query<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
     )>,
 ) {
