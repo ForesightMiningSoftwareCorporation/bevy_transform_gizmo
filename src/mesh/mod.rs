@@ -1,6 +1,6 @@
 use crate::{
-    gizmo_material::GizmoMaterial, InternalGizmoCamera, PickableGizmo, TransformGizmoBundle,
-    TransformGizmoInteraction,
+    gizmo_material::GizmoMaterial, GizmoSettings, InternalGizmoCamera, PickableGizmo,
+    TransformGizmoBundle, TransformGizmoInteraction,
 };
 use bevy::{pbr::NotShadowCaster, prelude::*, render::view::RenderLayers};
 use bevy_mod_raycast::NoBackfaceCulling;
@@ -19,6 +19,7 @@ pub fn build_gizmo(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<GizmoMaterial>>,
+    settings: Res<GizmoSettings>,
 ) {
     let axis_length = 1.3;
     let arc_radius = 1.;
@@ -50,14 +51,13 @@ pub fn build_gizmo(
     }));
     //let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
     // Define gizmo materials
-    let (s, l) = (0.8, 0.6);
-    let gizmo_matl_x = materials.add(GizmoMaterial::from(Color::hsl(0.0, s, l)));
-    let gizmo_matl_y = materials.add(GizmoMaterial::from(Color::hsl(120.0, s, l)));
-    let gizmo_matl_z = materials.add(GizmoMaterial::from(Color::hsl(240.0, s, l)));
-    let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(Color::hsl(0.0, s, l)));
-    let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(Color::hsl(120.0, s, l)));
-    let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(Color::hsl(240.0, s, l)));
-    let gizmo_matl_v_sel = materials.add(GizmoMaterial::from(Color::hsl(0., 0.0, l)));
+    let gizmo_matl_x = materials.add(GizmoMaterial::from(settings.colors.x));
+    let gizmo_matl_y = materials.add(GizmoMaterial::from(settings.colors.y));
+    let gizmo_matl_z = materials.add(GizmoMaterial::from(settings.colors.z));
+    let gizmo_matl_x_sel = materials.add(GizmoMaterial::from(settings.colors.x));
+    let gizmo_matl_y_sel = materials.add(GizmoMaterial::from(settings.colors.y));
+    let gizmo_matl_z_sel = materials.add(GizmoMaterial::from(settings.colors.z));
+    let gizmo_matl_v_sel = materials.add(GizmoMaterial::from(settings.colors.v));
     /*let gizmo_matl_origin = materials.add(StandardMaterial {
         unlit: true,
         base_color: Color::rgb(0.7, 0.7, 0.7),
