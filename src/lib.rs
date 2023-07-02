@@ -193,6 +193,7 @@ pub enum TransformGizmoInteraction {
 #[derive(Component)]
 struct InitialTransform {
     transform: Transform,
+    global_transform: GlobalTransform,
     rotation_offset: Vec3,
 }
 
@@ -202,7 +203,7 @@ fn drag_gizmo(
     pick_cam: Query<&GizmoPickSource>,
     mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_query: Query<
-        (&PickSelection, &mut Transform, &InitialTransform),
+        (&PickSelection, &mut GlobalTransform, &InitialTransform),
         Without<TransformGizmo>,
     >,
     gizmo_query: Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
@@ -277,12 +278,14 @@ fn drag_gizmo(
                 let new_handle_vec = cursor_vector.dot(selected_handle_vec.normalize())
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    *t = Transform {
-                        translation: i.transform.translation + translation,
-                        rotation: i.transform.rotation,
-                        scale: i.transform.scale,
-                    }
+                selected_iter.for_each(|(_s, mut gt, i)| {
+                    let (gt_scale, gt_rotation, _gt_translation) =
+                        gt.to_scale_rotation_translation();
+                    *gt = GlobalTransform::from(Transform {
+                        translation: i.global_transform.translation() + translation,
+                        rotation: gt_rotation,
+                        scale: gt_scale,
+                    });
                 });
             }
             TransformGizmoInteraction::TranslatePlane { normal, .. } => {
@@ -303,13 +306,15 @@ fn drag_gizmo(
                         return;
                     }
                 };
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    *t = Transform {
-                        translation: i.transform.translation + cursor_plane_intersection
+                selected_iter.for_each(|(_s, mut gt, i)| {
+                    let (gt_scale, gt_rotation, _gt_translation) =
+                        gt.to_scale_rotation_translation();
+                    *gt = GlobalTransform::from(Transform {
+                        translation: i.global_transform.translation() + cursor_plane_intersection
                             - drag_start,
-                        rotation: i.transform.rotation,
-                        scale: i.transform.scale,
-                    }
+                        rotation: gt_rotation,
+                        scale: gt_scale,
+                    });
                 });
             }
             TransformGizmoInteraction::RotateAxis { original: _, axis } => {
@@ -336,15 +341,19 @@ fn drag_gizmo(
                 let det = axis.dot(drag_start.cross(cursor_vector));
                 let angle = det.atan2(dot);
                 let rotation = Quat::from_axis_angle(axis, angle);
-                selected_iter.for_each(|(_s, mut t, i)| {
+                selected_iter.for_each(|(_s, mut gt, i)| {
+                    let (gt_scale, _gt_rotation, gt_translation) =
+                        gt.to_scale_rotation_translation();
+                    let (_i_scale, i_rotation, _i_translation) =
+                        i.global_transform.to_scale_rotation_translation();
                     let worldspace_offset = i.transform.rotation * i.rotation_offset;
                     let offset_rotated = rotation * worldspace_offset;
                     let offset = worldspace_offset - offset_rotated;
-                    *t = Transform {
-                        translation: i.transform.translation + offset,
-                        rotation: rotation * i.transform.rotation,
-                        scale: i.transform.scale,
-                    }
+                    *gt = GlobalTransform::from(Transform {
+                        translation: gt_translation + offset,
+                        rotation: rotation * i_rotation,
+                        scale: gt_scale,
+                    });
                 });
             }
             TransformGizmoInteraction::ScaleAxis {
@@ -418,6 +427,7 @@ fn grab_gizmo(
     mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &GlobalTransform)>,
     selected_items_query: Query<(
         &PickSelection,
+        &Transform,
         &GlobalTransform,
         Entity,
         Option<&RotationOriginOffset>,
@@ -429,12 +439,13 @@ fn grab_gizmo(
             if *interaction == Interaction::Hovered {
                 *interaction = Interaction::Clicked;
                 // Dragging has started, store the initial position of all selected meshes
-                for (selection, transform, entity, rotation_origin_offset) in
+                for (selection, transform, global_transform, entity, rotation_origin_offset) in
                     selected_items_query.iter()
                 {
                     if selection.is_selected {
                         commands.entity(entity).insert(InitialTransform {
-                            transform: transform.compute_transform(),
+                            transform: transform.clone().into(),
+                            global_transform: global_transform.clone().into(),
                             rotation_offset: rotation_origin_offset
                                 .map(|offset| offset.0)
                                 .unwrap_or(Vec3::ZERO),
