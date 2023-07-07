@@ -8,11 +8,9 @@ use bevy_mod_picking::{
     selection::{NoDeselect, PickSelection},
 };
 use bevy_mod_raycast::{Primitive3d, RaycastSystem};
-use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};
 use normalization::*;
 
-mod gizmo_material;
 mod mesh;
 pub mod normalization;
 
@@ -62,8 +60,8 @@ pub struct GizmoSettings {
 
 #[derive(Default, Debug, Clone)]
 pub struct TransformGizmoPlugin {
-    // Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
-    // coordinate system.
+    /// Rotation to apply to the gizmo when it is placed. Used to align the gizmo to a different
+    /// coordinate system.
     alignment_rotation: Quat,
 }
 impl TransformGizmoPlugin {
@@ -73,19 +71,12 @@ impl TransformGizmoPlugin {
 }
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
-        let mut shaders = app.world.get_resource_mut::<Assets<Shader>>().unwrap();
-        shaders.set_untracked(
-            gizmo_material::GIZMO_SHADER_HANDLE,
-            Shader::from_wgsl(include_str!("../assets/gizmo_material.wgsl")),
-        );
-        let alignment_rotation = self.alignment_rotation;
         app.insert_resource(GizmoSettings {
             enabled: true,
-            alignment_rotation,
+            alignment_rotation: self.alignment_rotation,
             allow_rotation: true,
         })
         .insert_resource(GizmoSystemsEnabled(true))
-        .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
         .add_plugin(picking::GizmoPickingPlugin)
         .add_event::<TransformGizmoEvent>()
         .add_plugin(Ui3dNormalization);
