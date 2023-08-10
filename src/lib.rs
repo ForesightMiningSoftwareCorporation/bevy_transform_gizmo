@@ -38,7 +38,7 @@ pub enum TransformGizmoSystem {
     Drag,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Event)]
 pub struct TransformGizmoEvent {
     pub from: GlobalTransform,
     pub to: GlobalTransform,
@@ -76,7 +76,10 @@ impl Plugin for TransformGizmoPlugin {
         let mut shaders = app.world.get_resource_mut::<Assets<Shader>>().unwrap();
         shaders.set_untracked(
             gizmo_material::GIZMO_SHADER_HANDLE,
-            Shader::from_wgsl(include_str!("../assets/gizmo_material.wgsl")),
+            Shader::from_wgsl(
+                include_str!("../assets/gizmo_material.wgsl"),
+                "../assets/gizmo_material.wgsl",
+            ),
         );
         let alignment_rotation = self.alignment_rotation;
         app.insert_resource(GizmoSettings {
@@ -85,13 +88,16 @@ impl Plugin for TransformGizmoPlugin {
             allow_rotation: true,
         })
         .insert_resource(GizmoSystemsEnabled(true))
-        .add_plugin(MaterialPlugin::<GizmoMaterial>::default())
-        .add_plugin(picking::GizmoPickingPlugin)
-        .add_event::<TransformGizmoEvent>()
-        .add_plugin(Ui3dNormalization);
+        .add_plugins((
+            MaterialPlugin::<GizmoMaterial>::default(),
+            picking::GizmoPickingPlugin,
+            Ui3dNormalization,
+        ))
+        .add_event::<TransformGizmoEvent>();
 
         // Input Set
         app.add_systems(
+            PreUpdate,
             (
                 update_gizmo_settings.in_set(TransformGizmoSystem::UpdateSettings),
                 hover_gizmo
@@ -101,16 +107,13 @@ impl Plugin for TransformGizmoPlugin {
                 grab_gizmo.in_set(TransformGizmoSystem::Grab),
             )
                 .chain()
-                .in_set(TransformGizmoSystem::InputsSet),
-        )
-        .configure_set(
-            TransformGizmoSystem::InputsSet
-                .run_if(|settings: Res<GizmoSettings>| settings.enabled)
-                .in_base_set(CoreSet::PreUpdate),
+                .in_set(TransformGizmoSystem::InputsSet)
+                .run_if(|settings: Res<GizmoSettings>| settings.enabled),
         );
 
         // Main Set
         app.add_systems(
+            PostUpdate,
             (
                 drag_gizmo
                     .in_set(TransformGizmoSystem::Drag)
@@ -123,16 +126,12 @@ impl Plugin for TransformGizmoPlugin {
                 gizmo_cam_copy_settings.in_set(TransformGizmoSystem::Drag),
             )
                 .chain()
-                .in_set(TransformGizmoSystem::MainSet),
-        )
-        .configure_set(
-            TransformGizmoSystem::MainSet
-                .run_if(|settings: Res<GizmoSettings>| settings.enabled)
-                .in_base_set(CoreSet::PostUpdate),
+                .in_set(TransformGizmoSystem::MainSet)
+                .run_if(|settings: Res<GizmoSettings>| settings.enabled),
         );
 
-        app.add_startup_system(mesh::build_gizmo)
-            .add_system(place_gizmo.in_base_set(StartupSet::PostStartup));
+        app.add_systems(Startup, mesh::build_gizmo)
+            .add_systems(PostStartup, place_gizmo);
     }
 }
 
@@ -223,7 +222,7 @@ fn drag_gizmo(
     // should have no effect on the handle. We can do this by projecting the vector from the handle
     // click point to mouse's current position, onto the axis of the direction we are dragging. See
     // the wiki article for details: https://en.wikipedia.org/wiki/Vector_projection
-    let gizmo_transform = if let Ok((transform, &Interaction::Clicked)) = gizmo_query.get_single() {
+    let gizmo_transform = if let Ok((transform, &Interaction::Pressed)) = gizmo_query.get_single() {
         transform.to_owned()
     } else {
         return;
@@ -374,7 +373,7 @@ fn hover_gizmo(
 
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source.get_nearest_intersection() {
             // Only update the gizmo state if it isn't being clicked (dragged) currently.
-            if *interaction != Interaction::Clicked {
+            if *interaction != Interaction::Pressed {
                 for child in children
                     .iter()
                     .filter(|entity| **entity == topmost_gizmo_entity)
@@ -427,7 +426,7 @@ fn grab_gizmo(
     if mouse_button_input.just_pressed(MouseButton::Left) {
         for (mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
             if *interaction == Interaction::Hovered {
-                *interaction = Interaction::Clicked;
+                *interaction = Interaction::Pressed;
                 // Dragging has started, store the initial position of all selected meshes
                 for (selection, transform, entity, rotation_origin_offset) in
                     selected_items_query.iter()

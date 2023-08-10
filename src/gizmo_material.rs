@@ -1,7 +1,7 @@
 use bevy::{
     pbr::{MaterialPipeline, MaterialPipelineKey},
     prelude::*,
-    reflect::TypeUuid,
+    reflect::{TypePath, TypeUuid},
     render::{
         mesh::MeshVertexBufferLayout,
         render_resource::{
@@ -13,7 +13,7 @@ use bevy::{
 pub const GIZMO_SHADER_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(Shader::TYPE_UUID, 13953800272683943019);
 
-#[derive(Debug, Clone, Default, TypeUuid, AsBindGroup)]
+#[derive(Debug, Clone, Default, TypeUuid, TypePath, AsBindGroup)]
 #[uuid = "0cf245a7-ce7a-4473-821c-111e6f359193"]
 pub struct GizmoMaterial {
     #[uniform(0)]

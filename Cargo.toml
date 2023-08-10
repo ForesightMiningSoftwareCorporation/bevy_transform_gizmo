@@ -14,22 +14,19 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.10.1", default-features = false, features = [
+bevy = { version = "0.11", default-features = false, features = [
     "bevy_render",
     "bevy_core_pipeline",
 ] }
-bevy_mod_picking = { version = "0.13", default-features = false, features = [
-    "selection",
-] }
-bevy_mod_raycast = "0.8"
-
-[dependencies.naga]
-features = ["wgsl-in", "spv-out", "wgsl-out"]
-version = "0.11.0"
+bevy_mod_picking = { git = "https://github.com/bardt/bevy_mod_picking.git", rev = "7ecb60e08735ce82f9ff03ba5adb434c1e336afd" }
+bevy_mod_raycast = "0.9"
 
 [dev-dependencies]
-bevy = { version = "0.10.1", default-features = false, features = [
+bevy = { version = "0.11", default-features = false, features = [
     "bevy_winit",
     "x11",
+    "tonemapping_luts",
+    "ktx2",
+    "zstd",
 ] }
-bevy_mod_picking = "0.13"
+bevy_mod_picking = { git = "https://github.com/bardt/bevy_mod_picking.git", rev = "7ecb60e08735ce82f9ff03ba5adb434c1e336afd" }
