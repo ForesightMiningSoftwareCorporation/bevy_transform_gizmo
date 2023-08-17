@@ -18,8 +18,8 @@ bevy = { version = "0.11", default-features = false, features = [
     "bevy_render",
     "bevy_core_pipeline",
 ] }
-bevy_mod_picking = { git = "https://github.com/bardt/bevy_mod_picking.git", rev = "7ecb60e08735ce82f9ff03ba5adb434c1e336afd" }
-bevy_mod_raycast = "0.9"
+bevy_mod_picking = { git = "https://github.com/bardt/bevy_mod_picking.git", rev = "a9e7275824807ca6e1b2f5caba10daf0526aae2a" }
+bevy_mod_raycast = "0.11"
 
 [dev-dependencies]
 bevy = { version = "0.11", default-features = false, features = [
@@ -29,4 +29,4 @@ bevy = { version = "0.11", default-features = false, features = [
     "ktx2",
     "zstd",
 ] }
-bevy_mod_picking = { git = "https://github.com/bardt/bevy_mod_picking.git", rev = "7ecb60e08735ce82f9ff03ba5adb434c1e336afd" }
+bevy_mod_picking = { git = "https://github.com/bardt/bevy_mod_picking.git", rev = "a9e7275824807ca6e1b2f5caba10daf0526aae2a" }
