@@ -17,6 +17,7 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 bevy = { version = "0.11", default-features = false, features = [
     "bevy_render",
     "bevy_core_pipeline",
+    "bevy_pbr",
 ] }
 bevy_mod_picking = { git = "https://github.com/bardt/bevy_mod_picking.git", rev = "a9e7275824807ca6e1b2f5caba10daf0526aae2a", default-features = false, features = [
     "selection",
