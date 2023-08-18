@@ -278,11 +278,11 @@ fn drag_gizmo(
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
                 selected_iter.for_each(|(_s, mut t, i)| {
-                    *t = Transform {
+                    t.set_if_neq(Transform {
                         translation: i.transform.translation + translation,
                         rotation: i.transform.rotation,
                         scale: i.transform.scale,
-                    }
+                    });
                 });
             }
             TransformGizmoInteraction::TranslatePlane { normal, .. } => {
@@ -304,12 +304,12 @@ fn drag_gizmo(
                     }
                 };
                 selected_iter.for_each(|(_s, mut t, i)| {
-                    *t = Transform {
+                    t.set_if_neq(Transform {
                         translation: i.transform.translation + cursor_plane_intersection
                             - drag_start,
                         rotation: i.transform.rotation,
                         scale: i.transform.scale,
-                    }
+                    });
                 });
             }
             TransformGizmoInteraction::RotateAxis { original: _, axis } => {
@@ -340,11 +340,11 @@ fn drag_gizmo(
                     let worldspace_offset = i.transform.rotation * i.rotation_offset;
                     let offset_rotated = rotation * worldspace_offset;
                     let offset = worldspace_offset - offset_rotated;
-                    *t = Transform {
+                    t.set_if_neq(Transform {
                         translation: i.transform.translation + offset,
                         rotation: rotation * i.transform.rotation,
                         scale: i.transform.scale,
-                    }
+                    });
                 });
             }
             TransformGizmoInteraction::ScaleAxis {
