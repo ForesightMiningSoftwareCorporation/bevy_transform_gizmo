@@ -1,17 +1,17 @@
-use bevy::{prelude::*, render::camera::Camera, transform::transform_propagate_system};
-use bevy_mod_picking::PickingCamera;
+use bevy::{prelude::*, render::camera::Camera, transform::TransformSystem};
 
-use crate::GizmoSystemsEnabledCriteria;
+use crate::{GizmoPickSource, GizmoSettings, TransformGizmoSystem};
 
 pub struct Ui3dNormalization;
 impl Plugin for Ui3dNormalization {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
+        app.add_systems(
+            PostUpdate,
             normalize
-                .with_run_criteria(GizmoSystemsEnabledCriteria)
-                .after(transform_propagate_system)
-                .after(crate::place_gizmo),
+                .in_set(TransformGizmoSystem::NormalizeSet)
+                .after(TransformSystem::TransformPropagate)
+                .after(TransformGizmoSystem::Place)
+                .run_if(|settings: Res<GizmoSettings>| settings.enabled),
         );
     }
 }
@@ -36,7 +36,7 @@ impl Normalize3d {
 #[allow(clippy::type_complexity)]
 pub fn normalize(
     mut query: ParamSet<(
-        Query<(&GlobalTransform, &Camera), With<PickingCamera>>,
+        Query<(&GlobalTransform, &Camera), With<GizmoPickSource>>,
         Query<(&mut Transform, &mut GlobalTransform, &Normalize3d)>,
     )>,
 ) {

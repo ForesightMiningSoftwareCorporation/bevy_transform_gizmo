@@ -2,7 +2,12 @@ use crate::{
     gizmo_material::GizmoMaterial, InternalGizmoCamera, PickableGizmo, TransformGizmoBundle,
     TransformGizmoInteraction,
 };
-use bevy::{pbr::NotShadowCaster, prelude::*, render::view::RenderLayers};
+use bevy::{
+    core_pipeline::{clear_color::ClearColorConfig, core_3d::Camera3dDepthLoadOp},
+    pbr::NotShadowCaster,
+    prelude::*,
+    render::view::RenderLayers,
+};
 use bevy_mod_raycast::NoBackfaceCulling;
 
 mod cone;
@@ -26,23 +31,26 @@ pub fn build_gizmo(
     let plane_offset = plane_size / 2. + axis_length * 0.2;
     // Define gizmo meshes
     let arrow_tail_mesh = meshes.add(Mesh::from(shape::Capsule {
-        radius: 0.05,
+        radius: 0.04,
         depth: axis_length,
         ..Default::default()
     }));
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
         height: 0.25,
-        radius: 0.12,
+        radius: 0.10,
         ..Default::default()
     }));
-    let plane_mesh = meshes.add(Mesh::from(shape::Plane { size: plane_size }));
-    let sphere_mesh = meshes.add(Mesh::from(shape::Icosphere {
-        radius: 0.2,
-        subdivisions: 3,
-    }));
+    let plane_mesh = meshes.add(Mesh::from(shape::Plane::from_size(plane_size)));
+    let sphere_mesh = meshes.add(
+        Mesh::try_from(shape::Icosphere {
+            radius: 0.2,
+            subdivisions: 3,
+        })
+        .unwrap(),
+    );
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
-        ring_radius: 0.05,
+        ring_radius: 0.04,
         ..Default::default()
     }));
     //let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 0.15 }));
@@ -306,8 +314,9 @@ pub fn build_gizmo(
     commands.spawn((
         Camera3dBundle {
             camera_3d: Camera3d {
-                clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
-                depth_load_op: bevy::core_pipeline::core_3d::Camera3dDepthLoadOp::Clear(0.),
+                clear_color: ClearColorConfig::None,
+                depth_load_op: Camera3dDepthLoadOp::Clear(0.),
+                ..default()
             },
             ..Default::default()
         },
