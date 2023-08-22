@@ -12,6 +12,7 @@ pub struct GizmoPickingPlugin;
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
+            PreUpdate,
             (
                 update_gizmo_raycast_with_cursor,
                 bevy_mod_raycast::build_rays::<GizmoRaycastSet>
@@ -20,12 +21,8 @@ impl Plugin for GizmoPickingPlugin {
                     .in_set(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
             )
                 .chain()
-                .in_set(TransformGizmoSystem::RaycastSet),
-        )
-        .configure_set(
-            TransformGizmoSystem::RaycastSet
-                .run_if(|settings: Res<GizmoSettings>| settings.enabled)
-                .in_base_set(CoreSet::PreUpdate),
+                .in_set(TransformGizmoSystem::RaycastSet)
+                .run_if(|settings: Res<GizmoSettings>| settings.enabled),
         );
     }
 }

@@ -5,16 +5,13 @@ use crate::{GizmoPickSource, GizmoSettings, TransformGizmoSystem};
 pub struct Ui3dNormalization;
 impl Plugin for Ui3dNormalization {
     fn build(&self, app: &mut App) {
-        app.add_system(
+        app.add_systems(
+            PostUpdate,
             normalize
                 .in_set(TransformGizmoSystem::NormalizeSet)
                 .after(TransformSystem::TransformPropagate)
-                .after(TransformGizmoSystem::Place),
-        )
-        .configure_set(
-            TransformGizmoSystem::NormalizeSet
-                .run_if(|settings: Res<GizmoSettings>| settings.enabled)
-                .in_base_set(CoreSet::PostUpdate),
+                .after(TransformGizmoSystem::Place)
+                .run_if(|settings: Res<GizmoSettings>| settings.enabled),
         );
     }
 }

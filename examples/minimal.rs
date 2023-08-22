@@ -1,7 +1,4 @@
-use bevy::{
-    prelude::*,
-    window::PresentMode::{self},
-};
+use bevy::{prelude::*, window::PresentMode};
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_transform_gizmo::TransformGizmoPlugin;
 
@@ -9,20 +6,22 @@ fn main() {
     App::new()
         .insert_resource(Msaa::Sample4)
         .insert_resource(ClearColor(Color::BLACK))
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                present_mode: PresentMode::Immediate,
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    present_mode: PresentMode::Immediate,
+                    ..default()
+                }),
                 ..default()
             }),
-            ..default()
-        }))
-        .add_plugins(DefaultPickingPlugins)
-        .add_plugin(TransformGizmoPlugin::new(
-            Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
-                                         // Use TransformGizmoPlugin::default() to align to the
-                                         // scene's coordinate system.
+            DefaultPickingPlugins,
+            TransformGizmoPlugin::new(
+                Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
+                                             // Use TransformGizmoPlugin::default() to align to the
+                                             // scene's coordinate system.
+            ),
         ))
-        .add_startup_system(setup)
+        .add_systems(Startup, setup)
         .run();
 }
 
