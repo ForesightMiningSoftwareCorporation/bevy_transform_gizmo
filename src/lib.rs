@@ -4,7 +4,7 @@ use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
 use bevy_mod_picking::{
     backend::{HitData, PointerHits},
     picking_core::PickSet,
-    prelude::PointerId,
+    prelude::{PickingInteraction, PointerId},
     selection::{NoDeselect, PickSelection},
 };
 use bevy_mod_raycast::{Primitive3d, RaycastSystem};
@@ -138,7 +138,7 @@ impl Plugin for TransformGizmoPlugin {
 #[derive(Bundle)]
 pub struct TransformGizmoBundle {
     gizmo: TransformGizmo,
-    interaction: Interaction,
+    picking_interaction: PickingInteraction,
     picking_blocker: NoDeselect,
     transform: Transform,
     global_transform: GlobalTransform,
@@ -151,7 +151,7 @@ impl Default for TransformGizmoBundle {
     fn default() -> Self {
         TransformGizmoBundle {
             transform: Transform::from_translation(Vec3::splat(f32::MIN)),
-            interaction: Interaction::None,
+            picking_interaction: PickingInteraction::None,
             picking_blocker: NoDeselect,
             visible: Visibility::Hidden,
             computed_visibility: ComputedVisibility::default(),
@@ -204,7 +204,7 @@ fn drag_gizmo(
         (&PickSelection, &mut Transform, &InitialTransform),
         Without<TransformGizmo>,
     >,
-    gizmo_query: Query<(&GlobalTransform, &Interaction), With<TransformGizmo>>,
+    gizmo_query: Query<(&GlobalTransform, &PickingInteraction), With<TransformGizmo>>,
 ) {
     let picking_camera = if let Some(cam) = pick_cam.iter().last() {
         cam
@@ -222,11 +222,12 @@ fn drag_gizmo(
     // should have no effect on the handle. We can do this by projecting the vector from the handle
     // click point to mouse's current position, onto the axis of the direction we are dragging. See
     // the wiki article for details: https://en.wikipedia.org/wiki/Vector_projection
-    let gizmo_transform = if let Ok((transform, &Interaction::Pressed)) = gizmo_query.get_single() {
-        transform.to_owned()
-    } else {
-        return;
-    };
+    let gizmo_transform =
+        if let Ok((transform, &PickingInteraction::Pressed)) = gizmo_query.get_single() {
+            transform.to_owned()
+        } else {
+            return;
+        };
     let mut gizmo = if let Ok(g) = gizmo_mut.get_single_mut() {
         g
     } else {
@@ -360,7 +361,7 @@ fn hover_gizmo(
         Entity,
         &Children,
         &mut TransformGizmo,
-        &mut Interaction,
+        &mut PickingInteraction,
         &Transform,
     )>,
     hover_query: Query<&TransformGizmoInteraction>,
@@ -373,22 +374,22 @@ fn hover_gizmo(
 
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source.get_nearest_intersection() {
             // Only update the gizmo state if it isn't being clicked (dragged) currently.
-            if *interaction != Interaction::Pressed {
+            if *interaction != PickingInteraction::Pressed {
                 for child in children
                     .iter()
                     .filter(|entity| **entity == topmost_gizmo_entity)
                 {
-                    *interaction = Interaction::Hovered;
+                    *interaction = PickingInteraction::Hovered;
                     if let Ok(gizmo_interaction) = hover_query.get(*child) {
                         gizmo.current_interaction = Some(*gizmo_interaction);
                     }
                 }
             }
-        } else if *interaction == Interaction::Hovered {
-            *interaction = Interaction::None
+        } else if *interaction == PickingInteraction::Hovered {
+            *interaction = PickingInteraction::None
         }
 
-        if !matches!(*interaction, Interaction::None) {
+        if !matches!(*interaction, PickingInteraction::None) {
             // Tell picking backend we're hovering the gizmo, so the `NoDeselect` component takes effect.
             let data = HitData {
                 camera,
@@ -399,7 +400,7 @@ fn hover_gizmo(
             hits.send(PointerHits {
                 pointer: PointerId::Mouse,
                 picks: vec![(gizmo_entity, data)],
-                order: 1000,
+                order: 1000.0,
             });
         }
     }
@@ -414,7 +415,11 @@ fn grab_gizmo(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     mut gizmo_events: EventWriter<TransformGizmoEvent>,
-    mut gizmo_query: Query<(&mut TransformGizmo, &mut Interaction, &GlobalTransform)>,
+    mut gizmo_query: Query<(
+        &mut TransformGizmo,
+        &mut PickingInteraction,
+        &GlobalTransform,
+    )>,
     selected_items_query: Query<(
         &PickSelection,
         &GlobalTransform,
@@ -425,8 +430,8 @@ fn grab_gizmo(
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
         for (mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
-            if *interaction == Interaction::Hovered {
-                *interaction = Interaction::Pressed;
+            if *interaction == PickingInteraction::Hovered {
+                *interaction = PickingInteraction::Pressed;
                 // Dragging has started, store the initial position of all selected meshes
                 for (selection, transform, entity, rotation_origin_offset) in
                     selected_items_query.iter()
@@ -449,7 +454,7 @@ fn grab_gizmo(
         }
     } else if mouse_button_input.just_released(MouseButton::Left) {
         for (mut gizmo, mut interaction, transform) in gizmo_query.iter_mut() {
-            *interaction = Interaction::None;
+            *interaction = PickingInteraction::None;
             if let (Some(from), Some(interaction)) =
                 (gizmo.initial_transform, gizmo.current_interaction())
             {
