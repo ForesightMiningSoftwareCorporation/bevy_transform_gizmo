@@ -202,7 +202,7 @@ fn drag_gizmo(
     mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_query: Query<
         (
-            &Selection,
+            &PickSelection,
             Option<&Parent>,
             &mut Transform,
             &InitialTransform,
@@ -248,7 +248,21 @@ fn drag_gizmo(
             origin
         }
     };
-    let selected_iter = transform_query.iter_mut().filter(|(s, ..)| s.is_selected);
+    let selected_iter = transform_query
+        .iter_mut()
+        .filter(|(s, ..)| s.is_selected)
+        .map(|(_, parent, local_transform, initial_global_transform)| {
+            let parent_global_transform = match parent {
+                Some(parent) => match parent_query.get(parent.get()) {
+                    Ok(transform) => *transform,
+                    Err(_) => GlobalTransform::IDENTITY,
+                },
+                None => GlobalTransform::IDENTITY,
+            };
+            let parent_mat = parent_global_transform.compute_matrix();
+            let inverse_parent = parent_mat.inverse();
+            (inverse_parent, local_transform, initial_global_transform)
+        });
     if let Some(interaction) = gizmo.current_interaction {
         if gizmo.initial_transform.is_none() {
             gizmo.initial_transform = Some(gizmo_transform);
@@ -284,16 +298,7 @@ fn drag_gizmo(
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
                 selected_iter.for_each(
-                    |(_s, parent, mut local_transform, initial_global_transform)| {
-                        let parent_global_transorm = match parent {
-                            Some(parent) => match parent_query.get(parent.get()) {
-                                Ok(transform) => *transform,
-                                Err(_) => GlobalTransform::IDENTITY,
-                            },
-                            None => GlobalTransform::IDENTITY,
-                        };
-                        let parent_mat = parent_global_transorm.compute_matrix();
-                        let inverse_parent = parent_mat.inverse();
+                    |(inverse_parent, mut local_transform, initial_global_transform)| {
                         let new_transform = Transform {
                             translation: initial_global_transform.transform.translation
                                 + translation,
@@ -324,16 +329,7 @@ fn drag_gizmo(
                     }
                 };
                 selected_iter.for_each(
-                    |(_selected, parent, mut local_transform, initial_transform)| {
-                        let parent_global_transorm = match parent {
-                            Some(parent) => match parent_query.get(parent.get()) {
-                                Ok(transform) => *transform,
-                                Err(_) => GlobalTransform::IDENTITY,
-                            },
-                            None => GlobalTransform::IDENTITY,
-                        };
-                        let parent_mat = parent_global_transorm.compute_matrix();
-                        let inverse_parent = parent_mat.inverse();
+                    |(inverse_parent, mut local_transform, initial_transform)| {
                         let new_transform = Transform {
                             translation: initial_transform.transform.translation
                                 + cursor_plane_intersection
@@ -371,21 +367,11 @@ fn drag_gizmo(
                 let angle = det.atan2(dot);
                 let rotation = Quat::from_axis_angle(axis, angle);
                 selected_iter.for_each(
-                    |(_selected, parent, mut local_transform, initial_transform)| {
-                        let parent_global_transorm = match parent {
-                            Some(parent) => match parent_query.get(parent.get()) {
-                                Ok(transform) => *transform,
-                                Err(_) => GlobalTransform::IDENTITY,
-                            },
-                            None => GlobalTransform::IDENTITY,
-                        };
-                        let parent_mat = parent_global_transorm.compute_matrix();
-                        let inverse_parent = parent_mat.inverse();
-
-                        let worldspace_offset = initial_transform.transform.rotation
+                    |(inverse_parent, mut local_transform, initial_transform)| {
+                        let world_space_offset = initial_transform.transform.rotation
                             * initial_transform.rotation_offset;
-                        let offset_rotated = rotation * worldspace_offset;
-                        let offset = worldspace_offset - offset_rotated;
+                        let offset_rotated = rotation * world_space_offset;
+                        let offset = world_space_offset - offset_rotated;
                         let new_transform = Transform {
                             translation: initial_transform.transform.translation + offset,
                             rotation: rotation * initial_transform.transform.rotation,
