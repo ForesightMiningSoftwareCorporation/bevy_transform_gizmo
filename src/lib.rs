@@ -201,9 +201,15 @@ fn drag_gizmo(
     pick_cam: Query<&GizmoPickSource>,
     mut gizmo_mut: Query<&mut TransformGizmo>,
     mut transform_query: Query<
-        (&PickSelection, &mut Transform, &InitialTransform),
+        (
+            &PickSelection,
+            Option<&Parent>,
+            &mut Transform,
+            &InitialTransform,
+        ),
         Without<TransformGizmo>,
     >,
+    parent_query: Query<&GlobalTransform>,
     gizmo_query: Query<(&GlobalTransform, &PickingInteraction), With<TransformGizmo>>,
 ) {
     let picking_camera = if let Some(cam) = pick_cam.iter().last() {
@@ -242,7 +248,21 @@ fn drag_gizmo(
             origin
         }
     };
-    let selected_iter = transform_query.iter_mut().filter(|(s, ..)| s.is_selected);
+    let selected_iter = transform_query
+        .iter_mut()
+        .filter(|(s, ..)| s.is_selected)
+        .map(|(_, parent, local_transform, initial_global_transform)| {
+            let parent_global_transform = match parent {
+                Some(parent) => match parent_query.get(parent.get()) {
+                    Ok(transform) => *transform,
+                    Err(_) => GlobalTransform::IDENTITY,
+                },
+                None => GlobalTransform::IDENTITY,
+            };
+            let parent_mat = parent_global_transform.compute_matrix();
+            let inverse_parent = parent_mat.inverse();
+            (inverse_parent, local_transform, initial_global_transform)
+        });
     if let Some(interaction) = gizmo.current_interaction {
         if gizmo.initial_transform.is_none() {
             gizmo.initial_transform = Some(gizmo_transform);
@@ -277,13 +297,18 @@ fn drag_gizmo(
                 let new_handle_vec = cursor_vector.dot(selected_handle_vec.normalize())
                     * selected_handle_vec.normalize();
                 let translation = new_handle_vec - selected_handle_vec;
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    t.set_if_neq(Transform {
-                        translation: i.transform.translation + translation,
-                        rotation: i.transform.rotation,
-                        scale: i.transform.scale,
-                    });
-                });
+                selected_iter.for_each(
+                    |(inverse_parent, mut local_transform, initial_global_transform)| {
+                        let new_transform = Transform {
+                            translation: initial_global_transform.transform.translation
+                                + translation,
+                            rotation: initial_global_transform.transform.rotation,
+                            scale: initial_global_transform.transform.scale,
+                        };
+                        let local = inverse_parent * new_transform.compute_matrix();
+                        local_transform.set_if_neq(Transform::from_matrix(local));
+                    },
+                );
             }
             TransformGizmoInteraction::TranslatePlane { normal, .. } => {
                 let plane_origin = gizmo_origin;
@@ -303,14 +328,19 @@ fn drag_gizmo(
                         return;
                     }
                 };
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    t.set_if_neq(Transform {
-                        translation: i.transform.translation + cursor_plane_intersection
-                            - drag_start,
-                        rotation: i.transform.rotation,
-                        scale: i.transform.scale,
-                    });
-                });
+                selected_iter.for_each(
+                    |(inverse_parent, mut local_transform, initial_transform)| {
+                        let new_transform = Transform {
+                            translation: initial_transform.transform.translation
+                                + cursor_plane_intersection
+                                - drag_start,
+                            rotation: initial_transform.transform.rotation,
+                            scale: initial_transform.transform.scale,
+                        };
+                        let local = inverse_parent * new_transform.compute_matrix();
+                        local_transform.set_if_neq(Transform::from_matrix(local));
+                    },
+                );
             }
             TransformGizmoInteraction::RotateAxis { original: _, axis } => {
                 let rotation_plane = Primitive3d::Plane {
@@ -336,16 +366,21 @@ fn drag_gizmo(
                 let det = axis.dot(drag_start.cross(cursor_vector));
                 let angle = det.atan2(dot);
                 let rotation = Quat::from_axis_angle(axis, angle);
-                selected_iter.for_each(|(_s, mut t, i)| {
-                    let worldspace_offset = i.transform.rotation * i.rotation_offset;
-                    let offset_rotated = rotation * worldspace_offset;
-                    let offset = worldspace_offset - offset_rotated;
-                    t.set_if_neq(Transform {
-                        translation: i.transform.translation + offset,
-                        rotation: rotation * i.transform.rotation,
-                        scale: i.transform.scale,
-                    });
-                });
+                selected_iter.for_each(
+                    |(inverse_parent, mut local_transform, initial_transform)| {
+                        let world_space_offset = initial_transform.transform.rotation
+                            * initial_transform.rotation_offset;
+                        let offset_rotated = rotation * world_space_offset;
+                        let offset = world_space_offset - offset_rotated;
+                        let new_transform = Transform {
+                            translation: initial_transform.transform.translation + offset,
+                            rotation: rotation * initial_transform.transform.rotation,
+                            scale: initial_transform.transform.scale,
+                        };
+                        let local = inverse_parent * new_transform.compute_matrix();
+                        local_transform.set_if_neq(Transform::from_matrix(local));
+                    },
+                );
             }
             TransformGizmoInteraction::ScaleAxis {
                 original: _,
