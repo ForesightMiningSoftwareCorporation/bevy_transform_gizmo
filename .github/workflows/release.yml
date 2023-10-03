@@ -1,0 +1,22 @@
+name: Release Pipeline
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      publish:
+        type: boolean
+        required: false
+        description: Trigger with publish
+
+jobs:
+  publish:
+    uses: ForesightMiningSoftwareCorporation/github/.github/workflows/rust-build.yml@v1
+    with:
+      publish: ${{ (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)) && 'true' || 'false' }}
+      publish_public_registry: true
+      toolchain: "1.70"
+    secrets: inherit
