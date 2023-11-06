@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use bevy_mod_raycast::RaycastSystem;
+use bevy_mod_raycast::prelude::RaycastSystem;
 
 use crate::{GizmoSettings, TransformGizmoSystem};
 
-pub type GizmoPickSource = bevy_mod_raycast::RaycastSource<GizmoRaycastSet>;
-pub type PickableGizmo = bevy_mod_raycast::RaycastMesh<GizmoRaycastSet>;
+pub type GizmoPickSource = bevy_mod_raycast::prelude::RaycastSource<GizmoRaycastSet>;
+pub type PickableGizmo = bevy_mod_raycast::prelude::RaycastMesh<GizmoRaycastSet>;
 
 /// Plugin with all the systems and resources used to raycast against gizmo handles separately from
 /// the `bevy_mod_picking` plugin.
@@ -15,9 +15,9 @@ impl Plugin for GizmoPickingPlugin {
             PreUpdate,
             (
                 update_gizmo_raycast_with_cursor,
-                bevy_mod_raycast::build_rays::<GizmoRaycastSet>
+                bevy_mod_raycast::prelude::build_rays::<GizmoRaycastSet>
                     .in_set(RaycastSystem::BuildRays::<GizmoRaycastSet>),
-                bevy_mod_raycast::update_raycast::<GizmoRaycastSet>
+                bevy_mod_raycast::prelude::update_raycast::<GizmoRaycastSet>
                     .in_set(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
             )
                 .chain()
@@ -39,7 +39,7 @@ fn update_gizmo_raycast_with_cursor(
         // Grab the most recent cursor event if it exists:
         if let Some(cursor_latest) = cursor.iter().last() {
             pick_source.cast_method =
-                bevy_mod_raycast::RaycastMethod::Screenspace(cursor_latest.position);
+                bevy_mod_raycast::prelude::RaycastMethod::Screenspace(cursor_latest.position);
         }
     }
 }

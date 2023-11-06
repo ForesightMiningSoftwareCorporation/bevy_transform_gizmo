@@ -7,7 +7,7 @@ use bevy_mod_picking::{
     prelude::{PickingInteraction, PointerId},
     selection::{NoDeselect, PickSelection},
 };
-use bevy_mod_raycast::{Primitive3d, RaycastSystem};
+use bevy_mod_raycast::prelude::{Primitive3d, RaycastSystem};
 use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};
 use normalization::*;

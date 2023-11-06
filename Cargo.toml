@@ -1,6 +1,6 @@
 [package]
 name = "bevy_transform_gizmo"
-version = "0.8.0"
+version = "0.9.0"
 authors = [
     "Aevyrie Roessler <aevyrie@gmail.com>",
     "Foresight Mining Software Corporation",
@@ -19,10 +19,10 @@ bevy = { version = "0.11", default-features = false, features = [
     "bevy_core_pipeline",
     "bevy_pbr",
 ] }
-bevy_mod_picking = { version = "0.15", default-features = false, features = [
+bevy_mod_picking = { version = "0.16", default-features = false, features = [
     "selection",
 ] }
-bevy_mod_raycast = "0.13"
+bevy_mod_raycast = "0.15"
 
 [dev-dependencies]
 bevy = { version = "0.11", default-features = false, features = [
@@ -33,7 +33,7 @@ bevy = { version = "0.11", default-features = false, features = [
     "ktx2",
     "zstd",
 ] }
-bevy_mod_picking = { version = "0.15", default-features = false, features = [
+bevy_mod_picking = { version = "0.16", default-features = false, features = [
     "selection",
     "backend_raycast",
     "highlight",
