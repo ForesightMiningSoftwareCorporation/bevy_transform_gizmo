@@ -8,7 +8,7 @@ use bevy::{
     prelude::*,
     render::view::RenderLayers,
 };
-use bevy_mod_raycast::NoBackfaceCulling;
+use bevy_mod_raycast::prelude::NoBackfaceCulling;
 
 mod cone;
 mod truncated_torus;

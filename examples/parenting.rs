@@ -54,7 +54,6 @@ fn setup(
                 ..default()
             },
             bevy_mod_picking::PickableBundle::default(),
-            bevy_mod_picking::backends::raycast::RaycastPickTarget::default(),
             bevy_transform_gizmo::GizmoTransformable,
         ))
         .with_children(|commands| {
@@ -66,7 +65,6 @@ fn setup(
                     ..default()
                 },
                 bevy_mod_picking::PickableBundle::default(),
-                bevy_mod_picking::backends::raycast::RaycastPickTarget::default(),
                 bevy_transform_gizmo::GizmoTransformable,
             ));
             commands.spawn((
@@ -77,7 +75,6 @@ fn setup(
                     ..default()
                 },
                 bevy_mod_picking::PickableBundle::default(),
-                bevy_mod_picking::backends::raycast::RaycastPickTarget::default(),
                 bevy_transform_gizmo::GizmoTransformable,
             ));
         });
@@ -93,7 +90,6 @@ fn setup(
             transform: Transform::from_xyz(2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         },
-        bevy_mod_picking::backends::raycast::RaycastPickCamera::default(),
         bevy_transform_gizmo::GizmoPickSource::default(),
     ));
 }
