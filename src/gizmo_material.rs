@@ -38,13 +38,9 @@ impl Material for GizmoMaterial {
     fn specialize(
         _pipeline: &MaterialPipeline<Self>,
         descriptor: &mut RenderPipelineDescriptor,
-        layout: &MeshVertexBufferLayout,
+        _layout: &MeshVertexBufferLayout,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        let vertex_layout = layout.get_layout(&[
-            Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
-        ])?;
-        descriptor.vertex.buffers = vec![vertex_layout];
         descriptor.primitive.cull_mode = None;
         Ok(())
     }
