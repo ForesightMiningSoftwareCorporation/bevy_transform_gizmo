@@ -17,11 +17,13 @@ mod mesh;
 pub mod normalization;
 
 pub mod picking;
+
 use picking::GizmoRaycastSet;
 pub use picking::{GizmoPickSource, PickableGizmo};
 
 #[derive(Resource, Clone, Debug)]
 pub struct GizmoSystemsEnabled(pub bool);
+
 pub use normalization::Ui3dNormalization;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
@@ -66,34 +68,28 @@ pub struct TransformGizmoPlugin {
     // coordinate system.
     alignment_rotation: Quat,
 }
+
 impl TransformGizmoPlugin {
     pub fn new(alignment_rotation: Quat) -> Self {
         TransformGizmoPlugin { alignment_rotation }
     }
 }
+
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
-        let mut shaders = app.world.get_resource_mut::<Assets<Shader>>().unwrap();
-        shaders.set_untracked(
-            gizmo_material::GIZMO_SHADER_HANDLE,
-            Shader::from_wgsl(
-                include_str!("../assets/gizmo_material.wgsl"),
-                "../assets/gizmo_material.wgsl",
-            ),
-        );
         let alignment_rotation = self.alignment_rotation;
         app.insert_resource(GizmoSettings {
             enabled: true,
             alignment_rotation,
             allow_rotation: true,
         })
-        .insert_resource(GizmoSystemsEnabled(true))
-        .add_plugins((
-            MaterialPlugin::<GizmoMaterial>::default(),
-            picking::GizmoPickingPlugin,
-            Ui3dNormalization,
-        ))
-        .add_event::<TransformGizmoEvent>();
+            .insert_resource(GizmoSystemsEnabled(true))
+            .add_plugins((
+                MaterialPlugin::<GizmoMaterial>::default(),
+                picking::GizmoPickingPlugin,
+                Ui3dNormalization,
+            ))
+            .add_event::<TransformGizmoEvent>();
 
         // Input Set
         app.add_systems(
@@ -143,7 +139,8 @@ pub struct TransformGizmoBundle {
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visibility,
-    computed_visibility: ComputedVisibility,
+    inherited_visibility: InheritedVisibility,
+    view_visibility: ViewVisibility,
     normalize: Normalize3d,
 }
 
@@ -154,7 +151,8 @@ impl Default for TransformGizmoBundle {
             picking_interaction: PickingInteraction::None,
             picking_blocker: NoDeselect,
             visible: Visibility::Hidden,
-            computed_visibility: ComputedVisibility::default(),
+            inherited_visibility: InheritedVisibility::default(),
+            view_visibility: ViewVisibility::default(),
             gizmo: TransformGizmo::default(),
             global_transform: GlobalTransform::default(),
             normalize: Normalize3d::new(1.5, 150.0),
@@ -464,12 +462,11 @@ fn grab_gizmo(
     initial_transform_query: Query<Entity, With<InitialTransform>>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        for (mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
-            if *interaction == PickingInteraction::Hovered {
-                *interaction = PickingInteraction::Pressed;
+        for (mut gizmo, interaction, _transform) in gizmo_query.iter_mut() {
+            if *interaction == PickingInteraction::Pressed {
                 // Dragging has started, store the initial position of all selected meshes
                 for (selection, transform, entity, rotation_origin_offset) in
-                    selected_items_query.iter()
+                selected_items_query.iter()
                 {
                     if selection.is_selected {
                         commands.entity(entity).insert(InitialTransform {
@@ -529,8 +526,8 @@ fn place_gizmo(
         .map(|(_s, t, offset)| {
             t.translation()
                 + offset
-                    .map(|o| t.compute_transform().rotation * o.0)
-                    .unwrap_or(Vec3::ZERO)
+                .map(|o| t.compute_transform().rotation * o.0)
+                .unwrap_or(Vec3::ZERO)
         })
         .collect();
     let n_selected = selected.len();
@@ -544,7 +541,7 @@ fn place_gizmo(
             rotation: plugin_settings.alignment_rotation,
             ..gt
         }
-        .into();
+            .into();
         transform.translation = centroid;
         transform.rotation = plugin_settings.alignment_rotation;
         if n_selected > 0 {
@@ -651,7 +648,7 @@ fn adjust_view_translate_gizmo(
         rotation,
         ..global_transform.compute_transform()
     }
-    .into();
+        .into();
 }
 
 fn gizmo_cam_copy_settings(

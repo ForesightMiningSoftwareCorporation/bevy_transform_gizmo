@@ -9,6 +9,7 @@ pub type PickableGizmo = bevy_mod_raycast::prelude::RaycastMesh<GizmoRaycastSet>
 /// Plugin with all the systems and resources used to raycast against gizmo handles separately from
 /// the `bevy_mod_picking` plugin.
 pub struct GizmoPickingPlugin;
+
 impl Plugin for GizmoPickingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
@@ -37,7 +38,7 @@ fn update_gizmo_raycast_with_cursor(
 ) {
     for mut pick_source in &mut query.iter_mut() {
         // Grab the most recent cursor event if it exists:
-        if let Some(cursor_latest) = cursor.iter().last() {
+        if let Some(cursor_latest) = cursor.read().last() {
             pick_source.cast_method =
                 bevy_mod_raycast::prelude::RaycastMethod::Screenspace(cursor_latest.position);
         }
