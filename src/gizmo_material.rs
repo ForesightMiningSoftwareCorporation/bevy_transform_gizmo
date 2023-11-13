@@ -10,6 +10,9 @@ use bevy::{
     },
 };
 
+pub const GIZMO_SHADER_HANDLE: Handle<Shader> =
+    Handle::weak_from_u128(13953800272683943019);
+
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct GizmoMaterial {
     #[uniform(0)]
@@ -24,11 +27,11 @@ impl From<Color> for GizmoMaterial {
 
 impl Material for GizmoMaterial {
     fn vertex_shader() -> ShaderRef {
-        "gizmo_material.wgsl".into()
+        GIZMO_SHADER_HANDLE.into()
     }
 
     fn fragment_shader() -> ShaderRef {
-        "gizmo_material.wgsl".into()
+        GIZMO_SHADER_HANDLE.into()
     }
 
     fn alpha_mode(&self) -> AlphaMode {

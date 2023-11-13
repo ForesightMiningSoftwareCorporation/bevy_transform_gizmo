@@ -1,6 +1,7 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
+use bevy::asset::load_internal_asset;
 use bevy_mod_picking::{
     backend::{HitData, PointerHits},
     picking_core::PickSet,
@@ -77,6 +78,8 @@ impl TransformGizmoPlugin {
 
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
+        load_internal_asset!(app, gizmo_material::GIZMO_SHADER_HANDLE, "gizmo_material.wgsl", Shader::from_wgsl);
+
         let alignment_rotation = self.alignment_rotation;
         app.insert_resource(GizmoSettings {
             enabled: true,
