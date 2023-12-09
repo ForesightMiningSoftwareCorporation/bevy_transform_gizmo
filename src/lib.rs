@@ -1,5 +1,6 @@
 #![allow(clippy::type_complexity)]
 
+use bevy::asset::load_internal_asset;
 use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
 use bevy_mod_picking::{
     backend::{HitData, PointerHits},
@@ -17,11 +18,13 @@ mod mesh;
 pub mod normalization;
 
 pub mod picking;
+
 use picking::GizmoRaycastSet;
 pub use picking::{GizmoPickSource, PickableGizmo};
 
 #[derive(Resource, Clone, Debug)]
 pub struct GizmoSystemsEnabled(pub bool);
+
 pub use normalization::Ui3dNormalization;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
@@ -66,21 +69,22 @@ pub struct TransformGizmoPlugin {
     // coordinate system.
     alignment_rotation: Quat,
 }
+
 impl TransformGizmoPlugin {
     pub fn new(alignment_rotation: Quat) -> Self {
         TransformGizmoPlugin { alignment_rotation }
     }
 }
+
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
-        let mut shaders = app.world.get_resource_mut::<Assets<Shader>>().unwrap();
-        shaders.set_untracked(
+        load_internal_asset!(
+            app,
             gizmo_material::GIZMO_SHADER_HANDLE,
-            Shader::from_wgsl(
-                include_str!("../assets/gizmo_material.wgsl"),
-                "../assets/gizmo_material.wgsl",
-            ),
+            "gizmo_material.wgsl",
+            Shader::from_wgsl
         );
+
         let alignment_rotation = self.alignment_rotation;
         app.insert_resource(GizmoSettings {
             enabled: true,
@@ -104,7 +108,9 @@ impl Plugin for TransformGizmoPlugin {
                     .in_set(TransformGizmoSystem::Hover)
                     .in_set(PickSet::Backend)
                     .after(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
-                grab_gizmo.in_set(TransformGizmoSystem::Grab),
+                grab_gizmo
+                    .in_set(TransformGizmoSystem::Grab)
+                    .after(PickSet::Focus),
             )
                 .chain()
                 .in_set(TransformGizmoSystem::InputsSet)
@@ -143,7 +149,8 @@ pub struct TransformGizmoBundle {
     transform: Transform,
     global_transform: GlobalTransform,
     visible: Visibility,
-    computed_visibility: ComputedVisibility,
+    inherited_visibility: InheritedVisibility,
+    view_visibility: ViewVisibility,
     normalize: Normalize3d,
 }
 
@@ -154,7 +161,8 @@ impl Default for TransformGizmoBundle {
             picking_interaction: PickingInteraction::None,
             picking_blocker: NoDeselect,
             visible: Visibility::Hidden,
-            computed_visibility: ComputedVisibility::default(),
+            inherited_visibility: InheritedVisibility::default(),
+            view_visibility: ViewVisibility::default(),
             gizmo: TransformGizmo::default(),
             global_transform: GlobalTransform::default(),
             normalize: Normalize3d::new(1.5, 150.0),
@@ -464,9 +472,8 @@ fn grab_gizmo(
     initial_transform_query: Query<Entity, With<InitialTransform>>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        for (mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
-            if *interaction == PickingInteraction::Hovered {
-                *interaction = PickingInteraction::Pressed;
+        for (mut gizmo, interaction, _transform) in gizmo_query.iter_mut() {
+            if *interaction == PickingInteraction::Pressed {
                 // Dragging has started, store the initial position of all selected meshes
                 for (selection, transform, entity, rotation_origin_offset) in
                     selected_items_query.iter()
