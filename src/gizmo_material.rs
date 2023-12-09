@@ -1,7 +1,7 @@
 use bevy::{
     pbr::{MaterialPipeline, MaterialPipelineKey},
     prelude::*,
-    reflect::{TypePath},
+    reflect::TypePath,
     render::{
         mesh::MeshVertexBufferLayout,
         render_resource::{
@@ -10,8 +10,7 @@ use bevy::{
     },
 };
 
-pub const GIZMO_SHADER_HANDLE: Handle<Shader> =
-    Handle::weak_from_u128(13953800272683943019);
+pub const GIZMO_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(13953800272683943019);
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct GizmoMaterial {

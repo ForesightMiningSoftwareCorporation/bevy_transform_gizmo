@@ -1,7 +1,7 @@
 #![allow(clippy::type_complexity)]
 
-use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
 use bevy::asset::load_internal_asset;
+use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
 use bevy_mod_picking::{
     backend::{HitData, PointerHits},
     picking_core::PickSet,
@@ -78,7 +78,12 @@ impl TransformGizmoPlugin {
 
 impl Plugin for TransformGizmoPlugin {
     fn build(&self, app: &mut App) {
-        load_internal_asset!(app, gizmo_material::GIZMO_SHADER_HANDLE, "gizmo_material.wgsl", Shader::from_wgsl);
+        load_internal_asset!(
+            app,
+            gizmo_material::GIZMO_SHADER_HANDLE,
+            "gizmo_material.wgsl",
+            Shader::from_wgsl
+        );
 
         let alignment_rotation = self.alignment_rotation;
         app.insert_resource(GizmoSettings {
@@ -86,13 +91,13 @@ impl Plugin for TransformGizmoPlugin {
             alignment_rotation,
             allow_rotation: true,
         })
-            .insert_resource(GizmoSystemsEnabled(true))
-            .add_plugins((
-                MaterialPlugin::<GizmoMaterial>::default(),
-                picking::GizmoPickingPlugin,
-                Ui3dNormalization,
-            ))
-            .add_event::<TransformGizmoEvent>();
+        .insert_resource(GizmoSystemsEnabled(true))
+        .add_plugins((
+            MaterialPlugin::<GizmoMaterial>::default(),
+            picking::GizmoPickingPlugin,
+            Ui3dNormalization,
+        ))
+        .add_event::<TransformGizmoEvent>();
 
         // Input Set
         app.add_systems(
@@ -469,7 +474,7 @@ fn grab_gizmo(
             if *interaction == PickingInteraction::Pressed {
                 // Dragging has started, store the initial position of all selected meshes
                 for (selection, transform, entity, rotation_origin_offset) in
-                selected_items_query.iter()
+                    selected_items_query.iter()
                 {
                     if selection.is_selected {
                         commands.entity(entity).insert(InitialTransform {
@@ -529,8 +534,8 @@ fn place_gizmo(
         .map(|(_s, t, offset)| {
             t.translation()
                 + offset
-                .map(|o| t.compute_transform().rotation * o.0)
-                .unwrap_or(Vec3::ZERO)
+                    .map(|o| t.compute_transform().rotation * o.0)
+                    .unwrap_or(Vec3::ZERO)
         })
         .collect();
     let n_selected = selected.len();
@@ -544,7 +549,7 @@ fn place_gizmo(
             rotation: plugin_settings.alignment_rotation,
             ..gt
         }
-            .into();
+        .into();
         transform.translation = centroid;
         transform.rotation = plugin_settings.alignment_rotation;
         if n_selected > 0 {
@@ -651,7 +656,7 @@ fn adjust_view_translate_gizmo(
         rotation,
         ..global_transform.compute_transform()
     }
-        .into();
+    .into();
 }
 
 fn gizmo_cam_copy_settings(
