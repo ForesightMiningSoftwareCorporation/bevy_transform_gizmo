@@ -29,12 +29,13 @@ fn setup(
     // plane
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane {
-                size: 5.0,
-                ..default()
-            })),
+            mesh: meshes.add(Mesh::from(Plane3d::default())),
             material: materials.add(StandardMaterial::from(Color::rgb(0.3, 0.5, 0.3))),
-            transform: Transform::from_xyz(0.0, -0.5, 0.0),
+            transform: Transform {
+                translation: Vec3::new(0.0, -0.5, 0.0),
+                scale: Vec3::splat(5.0),
+                ..Default::default()
+            },
             ..Default::default()
         },
         bevy_mod_picking::PickableBundle::default(),
@@ -48,7 +49,9 @@ fn setup(
     commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                mesh: meshes.add(Mesh::from(Cuboid {
+                    half_size: Vec3::splat(0.5f32),
+                })),
                 material: materials.add(StandardMaterial::from(red)),
                 transform: Transform::from_xyz(-1.0, 0.0, 0.0),
                 ..default()
@@ -59,7 +62,9 @@ fn setup(
         .with_children(|commands| {
             commands.spawn((
                 PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    mesh: meshes.add(Mesh::from(Cuboid {
+                        half_size: Vec3::splat(0.5f32),
+                    })),
                     material: materials.add(StandardMaterial::from(tan)),
                     transform: Transform::from_xyz(1.0, 0.0, 0.0),
                     ..default()
@@ -69,7 +74,9 @@ fn setup(
             ));
             commands.spawn((
                 PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    mesh: meshes.add(Mesh::from(Cuboid {
+                        half_size: Vec3::splat(0.5f32),
+                    })),
                     material: materials.add(StandardMaterial::from(tan)),
                     transform: Transform::from_xyz(1.0, 1.0, 0.0),
                     ..default()
