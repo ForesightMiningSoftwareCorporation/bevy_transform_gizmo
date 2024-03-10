@@ -3,9 +3,7 @@ use crate::{
     TransformGizmoInteraction,
 };
 use bevy::{
-    core_pipeline::{clear_color::ClearColorConfig, core_3d::Camera3dDepthLoadOp},
-    pbr::NotShadowCaster,
-    prelude::*,
+    core_pipeline::core_3d::Camera3dDepthLoadOp, pbr::NotShadowCaster, prelude::*,
     render::view::RenderLayers,
 };
 use bevy_mod_raycast::prelude::NoBackfaceCulling;
@@ -314,8 +312,11 @@ pub fn build_gizmo(
     commands.spawn((
         Camera3dBundle {
             camera_3d: Camera3d {
-                clear_color: ClearColorConfig::None,
                 depth_load_op: Camera3dDepthLoadOp::Clear(0.),
+                ..default()
+            },
+            camera: Camera {
+                clear_color: ClearColorConfig::None,
                 ..default()
             },
             ..Default::default()
