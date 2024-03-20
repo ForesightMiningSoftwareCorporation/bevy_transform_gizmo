@@ -38,7 +38,7 @@ pub fn build_gizmo(
         radius: 0.10,
         ..Default::default()
     }));
-    let plane_mesh = meshes.add(Mesh::from(Plane3d::default()));
+    let plane_mesh = meshes.add(Mesh::from(Plane3d::default().mesh().size(plane_size, plane_size)));
     let sphere_mesh = meshes.add(Mesh::try_from(Sphere { radius: 0.2 }).unwrap());
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
