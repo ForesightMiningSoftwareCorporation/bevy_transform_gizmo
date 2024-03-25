@@ -14,7 +14,7 @@ documentation = "https://docs.rs/bevy_transform_gizmo"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.13.1", default-features = false, features = [
+bevy = { version = "0.13", default-features = false, features = [
     "bevy_render",
     "bevy_core_pipeline",
     "bevy_pbr",
@@ -25,7 +25,7 @@ bevy_mod_picking = { version = "0.18", default-features = false, features = [
 bevy_mod_raycast = "0.17"
 
 [dev-dependencies]
-bevy = { version = "0.13.1", default-features = false, features = [
+bevy = { version = "0.13", default-features = false, features = [
     "bevy_pbr",
     "bevy_winit",
     "x11",
