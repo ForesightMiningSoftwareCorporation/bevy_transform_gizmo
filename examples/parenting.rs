@@ -29,11 +29,8 @@ fn setup(
     // plane
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane {
-                size: 5.0,
-                ..default()
-            })),
-            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            mesh: meshes.add(Mesh::from(Plane3d::default().mesh().size(5.0, 5.0))),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3)),
             transform: Transform::from_xyz(0.0, -0.5, 0.0),
             ..Default::default()
         },
@@ -48,8 +45,8 @@ fn setup(
     commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                material: materials.add(red.into()),
+                mesh: meshes.add(Mesh::from(Cuboid::from_size(Vec3::splat(1.0)))),
+                material: materials.add(red),
                 transform: Transform::from_xyz(-1.0, 0.0, 0.0),
                 ..default()
             },
@@ -59,8 +56,8 @@ fn setup(
         .with_children(|commands| {
             commands.spawn((
                 PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                    material: materials.add(tan.into()),
+                    mesh: meshes.add(Mesh::from(Cuboid::from_size(Vec3::splat(1.0)))),
+                    material: materials.add(tan),
                     transform: Transform::from_xyz(1.0, 0.0, 0.0),
                     ..default()
                 },
@@ -69,8 +66,8 @@ fn setup(
             ));
             commands.spawn((
                 PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                    material: materials.add(tan.into()),
+                    mesh: meshes.add(Mesh::from(Cuboid::from_size(Vec3::splat(1.0)))),
+                    material: materials.add(tan),
                     transform: Transform::from_xyz(1.0, 1.0, 0.0),
                     ..default()
                 },

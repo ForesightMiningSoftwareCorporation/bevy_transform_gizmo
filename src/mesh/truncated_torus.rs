@@ -1,6 +1,9 @@
 use bevy::{
     prelude::*,
-    render::{mesh::Indices, render_resource::PrimitiveTopology},
+    render::{
+        mesh::Indices, render_asset::RenderAssetUsages,
+        render_resource::PrimitiveTopology::TriangleList,
+    },
 };
 /// A torus (donut) shape.
 #[derive(Debug, Clone, Copy)]
@@ -84,11 +87,10 @@ impl From<TruncatedTorus> for Mesh {
             }
         }
 
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_indices(Some(Indices::U32(indices)));
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-        mesh
+        Mesh::new(TriangleList, RenderAssetUsages::default())
+            .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+            .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+            .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+            .with_inserted_indices(Indices::U32(indices))
     }
 }

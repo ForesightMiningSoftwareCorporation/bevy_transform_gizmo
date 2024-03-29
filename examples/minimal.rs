@@ -34,8 +34,8 @@ fn setup(
     // plane
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
+            mesh: meshes.add(Mesh::from(Plane3d::default().mesh().size(5.0, 5.0))),
+            material: materials.add(Color::rgb(0.8, 0.8, 0.8)),
             ..Default::default()
         },
         bevy_mod_picking::PickableBundle::default(),
@@ -44,8 +44,8 @@ fn setup(
     // cube
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.8).into()),
+            mesh: meshes.add(Mesh::from(Cuboid::from_size(Vec3::splat(1.0)))),
+            material: materials.add(Color::rgb(0.8, 0.8, 0.8)),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
             ..Default::default()
         },

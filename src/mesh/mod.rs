@@ -3,10 +3,11 @@ use crate::{
     TransformGizmoInteraction,
 };
 use bevy::{
-    core_pipeline::{clear_color::ClearColorConfig, core_3d::Camera3dDepthLoadOp},
+    core_pipeline::core_3d::Camera3dDepthLoadOp,
+    math::primitives::{Capsule3d, Plane3d, Sphere},
     pbr::NotShadowCaster,
     prelude::*,
-    render::view::RenderLayers,
+    render::{camera::ClearColorConfig, view::RenderLayers},
 };
 use bevy_mod_raycast::prelude::NoBackfaceCulling;
 
@@ -30,24 +31,19 @@ pub fn build_gizmo(
     let plane_size = axis_length * 0.25;
     let plane_offset = plane_size / 2. + axis_length * 0.2;
     // Define gizmo meshes
-    let arrow_tail_mesh = meshes.add(Mesh::from(shape::Capsule {
+    let arrow_tail_mesh = meshes.add(Mesh::from(Capsule3d {
         radius: 0.04,
-        depth: axis_length,
-        ..Default::default()
+        half_length: axis_length,
     }));
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
         height: 0.25,
         radius: 0.10,
         ..Default::default()
     }));
-    let plane_mesh = meshes.add(Mesh::from(shape::Plane::from_size(plane_size)));
-    let sphere_mesh = meshes.add(
-        Mesh::try_from(shape::Icosphere {
-            radius: 0.2,
-            subdivisions: 3,
-        })
-        .unwrap(),
-    );
+    let plane_mesh = meshes.add(Mesh::from(
+        Plane3d::default().mesh().size(plane_size, plane_size),
+    ));
+    let sphere_mesh = meshes.add(Sphere { radius: 0.2 }.mesh().ico(3).unwrap());
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
         ring_radius: 0.04,
@@ -313,12 +309,15 @@ pub fn build_gizmo(
 
     commands.spawn((
         Camera3dBundle {
-            camera_3d: Camera3d {
+            camera: Camera {
                 clear_color: ClearColorConfig::None,
+                ..default()
+            },
+            camera_3d: Camera3d {
                 depth_load_op: Camera3dDepthLoadOp::Clear(0.),
                 ..default()
             },
-            ..Default::default()
+            ..default()
         },
         InternalGizmoCamera,
         RenderLayers::layer(12),
