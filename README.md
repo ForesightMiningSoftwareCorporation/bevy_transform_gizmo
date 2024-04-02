@@ -8,7 +8,7 @@ https://user-images.githubusercontent.com/2632925/227469248-726b21c8-5308-49f0-9
 
 [![crates.io](https://img.shields.io/crates/v/bevy_transform_gizmo)](https://crates.io/crates/bevy_transform_gizmo)
 [![docs.rs](https://docs.rs/bevy_transform_gizmo/badge.svg)](https://docs.rs/bevy_transform_gizmo)
-[![CI](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/workflows/CI/badge.svg?branch=main)](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/actions?query=workflow%3A%22CI%22+branch%3Amain)
+[![CI-CD](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/actions/workflows/release.yml/badge.svg)](https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/actions/workflows/release.yml)
 [![Bevy tracking](https://img.shields.io/badge/Bevy%20tracking-main-lightblue)](https://github.com/bevyengine/bevy/blob/main/docs/plugins_guidelines.md#main-branch-tracking)
     
 </div>
@@ -47,7 +47,6 @@ at your option. This means you can select the license you prefer! This dual-lice
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
 ## Sponsors
-The creation and maintenance of Bevy Transform Gizmo is sponsored by Foresight Mining Software Corporation.
+The creation and maintenance of Bevy Transform Gizmo is sponsored by Foresight Spatial Labs.
 
-<img src="https://user-images.githubusercontent.com/2632925/151242316-db3455d1-4934-4374-8369-1818daf512dd.png" alt="Foresight Mining Software Corporation" width="480">
-
+<img src="https://avatars.githubusercontent.com/u/83515353?s=200&v=4" alt="Foresight Spatial Labs" width="480">
