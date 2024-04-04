@@ -31,7 +31,6 @@ pub fn build_gizmo(
     let arrow_tail_mesh = meshes.add(Mesh::from(Capsule3d {
         radius: 0.04,
         half_length: axis_length * 0.5f32,
-        ..Default::default()
     }));
     let cone_mesh = meshes.add(Mesh::from(cone::Cone {
         height: 0.25,
@@ -41,7 +40,7 @@ pub fn build_gizmo(
     let plane_mesh = meshes.add(Mesh::from(
         Plane3d::default().mesh().size(plane_size, plane_size),
     ));
-    let sphere_mesh = meshes.add(Mesh::try_from(Sphere { radius: 0.2 }).unwrap());
+    let sphere_mesh = meshes.add(Mesh::from(Sphere { radius: 0.2 }));
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
         ring_radius: 0.04,
