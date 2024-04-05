@@ -49,4 +49,6 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 ## Sponsors
 The creation and maintenance of Bevy Transform Gizmo is sponsored by Foresight Spatial Labs.
 
-<img src="https://avatars.githubusercontent.com/u/83515353?s=200&v=4" alt="Foresight Spatial Labs" width="480">
+<div align="center">
+<img width="480" src="https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/assets/2632925/342617f6-7960-47f6-970d-cc5977341582"/>
+</div>
