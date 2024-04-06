@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     render::{mesh::Indices, render_asset::RenderAssetUsages, render_resource::PrimitiveTopology},
 };
-/// A cone) shape.
+/// A cone shape.
 #[derive(Debug, Clone, Copy)]
 pub struct Cone {
     pub radius: f32,

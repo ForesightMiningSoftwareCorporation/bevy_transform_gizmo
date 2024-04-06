@@ -1,6 +1,6 @@
 [package]
 name = "bevy_transform_gizmo"
-version = "0.11.0"
+version = "0.10.0"
 authors = [
     "Aevyrie Roessler <aevyrie@gmail.com>",
     "Foresight Mining Software Corporation",
@@ -37,5 +37,5 @@ bevy_mod_picking = { version = "0.18", default-features = false, features = [
     "selection",
     "backend_raycast",
     "highlight",
-    "bevy_picking_raycast"
+    "bevy_picking_raycast",
 ] }

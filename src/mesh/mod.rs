@@ -28,19 +28,17 @@ pub fn build_gizmo(
     let plane_size = axis_length * 0.25;
     let plane_offset = plane_size / 2. + axis_length * 0.2;
     // Define gizmo meshes
-    let arrow_tail_mesh = meshes.add(Mesh::from(Capsule3d {
+    let arrow_tail_mesh = meshes.add(Capsule3d {
         radius: 0.04,
         half_length: axis_length * 0.5f32,
-    }));
-    let cone_mesh = meshes.add(Mesh::from(cone::Cone {
+    });
+    let cone_mesh = meshes.add(cone::Cone {
         height: 0.25,
         radius: 0.10,
         ..Default::default()
-    }));
-    let plane_mesh = meshes.add(Mesh::from(
-        Plane3d::default().mesh().size(plane_size, plane_size),
-    ));
-    let sphere_mesh = meshes.add(Mesh::from(Sphere { radius: 0.2 }));
+    });
+    let plane_mesh = meshes.add(Plane3d::default().mesh().size(plane_size, plane_size));
+    let sphere_mesh = meshes.add(Sphere { radius: 0.2 });
     let rotation_mesh = meshes.add(Mesh::from(truncated_torus::TruncatedTorus {
         radius: arc_radius,
         ring_radius: 0.04,

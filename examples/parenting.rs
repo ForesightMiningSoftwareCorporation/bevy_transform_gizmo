@@ -29,13 +29,10 @@ fn setup(
     // plane
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(Plane3d::default())),
-            material: materials.add(StandardMaterial::from(Color::rgb(0.3, 0.5, 0.3))),
-            transform: Transform {
-                translation: Vec3::new(0.0, -0.5, 0.0),
-                scale: Vec3::splat(5.0),
-                ..Default::default()
-            },
+            mesh: meshes.add(Plane3d::default()),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3)),
+            transform: Transform::from_translation(Vec3::new(0.0, -0.5, 0.0))
+                .with_scale(Vec3::splat(5.0)),
             ..Default::default()
         },
         bevy_mod_picking::PickableBundle::default(),
@@ -49,9 +46,7 @@ fn setup(
     commands
         .spawn((
             PbrBundle {
-                mesh: meshes.add(Mesh::from(Cuboid {
-                    half_size: Vec3::splat(0.5f32),
-                })),
+                mesh: meshes.add(Cuboid::from_size(Vec3::splat(1.0))),
                 material: materials.add(StandardMaterial::from(red)),
                 transform: Transform::from_xyz(-1.0, 0.0, 0.0),
                 ..default()
@@ -62,9 +57,7 @@ fn setup(
         .with_children(|commands| {
             commands.spawn((
                 PbrBundle {
-                    mesh: meshes.add(Mesh::from(Cuboid {
-                        half_size: Vec3::splat(0.5f32),
-                    })),
+                    mesh: meshes.add(Cuboid::from_size(Vec3::splat(1.0))),
                     material: materials.add(StandardMaterial::from(tan)),
                     transform: Transform::from_xyz(1.0, 0.0, 0.0),
                     ..default()
@@ -74,9 +67,7 @@ fn setup(
             ));
             commands.spawn((
                 PbrBundle {
-                    mesh: meshes.add(Mesh::from(Cuboid {
-                        half_size: Vec3::splat(0.5f32),
-                    })),
+                    mesh: meshes.add(Cuboid::from_size(Vec3::splat(1.0))),
                     material: materials.add(StandardMaterial::from(tan)),
                     transform: Transform::from_xyz(1.0, 1.0, 0.0),
                     ..default()
