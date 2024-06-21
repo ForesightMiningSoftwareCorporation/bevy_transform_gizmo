@@ -412,7 +412,7 @@ fn hover_gizmo(
 ) {
     for (gizmo_entity, children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
         let Ok((camera, gizmo_raycast_source)) = gizmo_raycast_source.get_single() else {
-            warn!("Missing gizmo raycast source");
+            warn!("There must be exactly one gizmo raycast source");
             return;
         };
 
