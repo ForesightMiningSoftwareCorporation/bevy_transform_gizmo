@@ -1,6 +1,6 @@
 [package]
 name = "bevy_transform_gizmo"
-version = "0.10.0"
+version = "0.10.1"
 authors = [
     "Aevyrie Roessler <aevyrie@gmail.com>",
     "Foresight Mining Software Corporation",
