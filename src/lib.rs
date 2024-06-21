@@ -411,9 +411,10 @@ fn hover_gizmo(
     mut hits: EventWriter<PointerHits>,
 ) {
     for (gizmo_entity, children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
-        let (camera, gizmo_raycast_source) = gizmo_raycast_source
-            .get_single()
-            .expect("Missing gizmo raycast source");
+        let Ok((camera, gizmo_raycast_source)) = gizmo_raycast_source.get_single() else {
+            warn!("Missing gizmo raycast source");
+            return;
+        };
 
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source.get_nearest_intersection() {
             // Only update the gizmo state if it isn't being clicked (dragged) currently.
