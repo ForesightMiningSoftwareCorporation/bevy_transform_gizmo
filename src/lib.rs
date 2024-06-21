@@ -277,7 +277,7 @@ fn drag_gizmo(
         }
         match interaction {
             TransformGizmoInteraction::TranslateAxis { original: _, axis } => {
-                let vertical_vector = picking_ray.direction().cross(axis).normalize();
+                let vertical_vector = picking_ray.direction.cross(axis).normalize();
                 let plane_normal = axis.cross(vertical_vector).normalize();
                 let plane_origin = gizmo_origin;
                 let cursor_plane_intersection = if let Some(intersection) = picking_camera
@@ -457,7 +457,7 @@ pub struct RotationOriginOffset(pub Vec3);
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn grab_gizmo(
     mut commands: Commands,
-    mouse_button_input: Res<Input<MouseButton>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
     mut gizmo_events: EventWriter<TransformGizmoEvent>,
     mut gizmo_query: Query<(
         &mut TransformGizmo,
@@ -648,12 +648,12 @@ fn adjust_view_translate_gizmo(
     let direction = cam_transform.local_z();
     *interaction = TransformGizmoInteraction::TranslatePlane {
         original: Vec3::ZERO,
-        normal: direction,
+        normal: *direction,
     };
     let rotation = Quat::from_mat3(&Mat3::from_cols(
-        direction.cross(cam_transform.local_y()),
-        direction,
-        cam_transform.local_y(),
+        direction.cross(*cam_transform.local_y()),
+        *direction,
+        *cam_transform.local_y(),
     ));
     *global_transform = Transform {
         rotation,
