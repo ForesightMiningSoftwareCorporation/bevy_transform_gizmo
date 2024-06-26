@@ -411,9 +411,13 @@ fn hover_gizmo(
     mut hits: EventWriter<PointerHits>,
 ) {
     for (gizmo_entity, children, mut gizmo, mut interaction, _transform) in gizmo_query.iter_mut() {
-        let Ok((camera, gizmo_raycast_source)) = gizmo_raycast_source.get_single() else {
-            warn!("There must be exactly one gizmo raycast source");
-            return;
+        let (camera, gizmo_raycast_source) = match gizmo_raycast_source.get_single() {
+            Ok(data) => data,
+            Err(bevy::ecs::query::QuerySingleError::MultipleEntities(_)) => {
+                warn!("Only one GizmoPickSource allowed at a time.");
+                return;
+            }
+            Err(bevy::ecs::query::QuerySingleError::NoEntities(_)) => return, // This is fine
         };
 
         if let Some((topmost_gizmo_entity, _)) = gizmo_raycast_source.get_nearest_intersection() {
