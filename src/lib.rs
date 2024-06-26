@@ -673,11 +673,13 @@ fn gizmo_cam_copy_settings(
         (With<InternalGizmoCamera>, Without<GizmoPickSource>),
     >,
 ) {
-    let (main_cam, main_cam_pos, main_proj) = if let Ok(x) = main_cam.get_single() {
-        x
-    } else {
-        error!("No `GizmoPickSource` found! Insert the `GizmoPickSource` component onto your primary 3d camera");
-        return;
+    let (main_cam, main_cam_pos, main_proj) = match main_cam.get_single() {
+        Ok(data) => data,
+        Err(bevy::ecs::query::QuerySingleError::MultipleEntities(_)) => {
+            warn!("Only one GizmoPickSource allowed at a time.");
+            return;
+        }
+        Err(bevy::ecs::query::QuerySingleError::NoEntities(_)) => return, // This is fine
     };
     let (mut gizmo_cam, mut gizmo_cam_pos, mut proj) = gizmo_cam.single_mut();
     if main_cam_pos.is_changed() {
