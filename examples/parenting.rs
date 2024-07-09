@@ -30,7 +30,7 @@ fn setup(
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Plane3d::default()),
-            material: materials.add(Color::rgb(0.3, 0.5, 0.3)),
+            material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
             transform: Transform::from_translation(Vec3::new(0.0, -0.5, 0.0))
                 .with_scale(Vec3::splat(5.0)),
             ..Default::default()
@@ -39,8 +39,8 @@ fn setup(
         bevy_transform_gizmo::GizmoTransformable,
     ));
 
-    let tan = Color::rgb_u8(204, 178, 153);
-    let red = Color::rgb_u8(127, 26, 26);
+    let tan = Color::srgb_u8(204, 178, 153);
+    let red = Color::srgb_u8(127, 26, 26);
 
     // cube
     commands
