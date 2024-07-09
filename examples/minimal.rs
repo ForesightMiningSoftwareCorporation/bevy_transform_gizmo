@@ -35,7 +35,7 @@ fn setup(
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Plane3d::default()),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.8)),
+            material: materials.add(Color::srgb(0.8, 0.8, 0.8)),
             transform: Transform::from_scale(Vec3::splat(5.0)),
             ..Default::default()
         },
@@ -46,7 +46,7 @@ fn setup(
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Cuboid::from_size(Vec3::splat(1.0))),
-            material: materials.add(Color::rgb(0.8, 0.8, 0.8)),
+            material: materials.add(Color::srgb(0.8, 0.8, 0.8)),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
             ..Default::default()
         },
