@@ -19,7 +19,7 @@ bevy = { version = "0.14.0", default-features = false, features = [
     "bevy_core_pipeline",
     "bevy_pbr",
 ] }
-bevy_mod_picking = { version = ">=0.18, <=0.20", default-features = false, features = [
+bevy_mod_picking = { version = "0.20", default-features = false, features = [
     "selection",
 ] }
 bevy_mod_raycast = { version = "0.18", default-features = false }
@@ -33,7 +33,7 @@ bevy = { version = "0.14.0", default-features = false, features = [
     "ktx2",
     "zstd",
 ] }
-bevy_mod_picking = { version = ">=0.18, <=0.20", default-features = false, features = [
+bevy_mod_picking = { version = "0.20", default-features = false, features = [
     "selection",
     "backend_raycast",
     "highlight",
