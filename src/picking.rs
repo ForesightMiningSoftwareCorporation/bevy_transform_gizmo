@@ -15,10 +15,10 @@ impl Plugin for GizmoPickingPlugin {
             PreUpdate,
             (
                 update_gizmo_raycast_with_cursor,
-                bevy_mod_raycast::prelude::build_rays::<GizmoRaycastSet>
-                    .in_set(RaycastSystem::BuildRays::<GizmoRaycastSet>),
-                bevy_mod_raycast::prelude::update_raycast::<GizmoRaycastSet>
-                    .in_set(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
+                // bevy_mod_raycast::prelude::build_rays::<GizmoRaycastSet>
+                //     .in_set(RaycastSystem::BuildRays::<GizmoRaycastSet>),
+                // bevy_mod_raycast::prelude::update_raycast::<GizmoRaycastSet>
+                //     .in_set(RaycastSystem::UpdateRaycast::<GizmoRaycastSet>),
             )
                 .chain()
                 .in_set(TransformGizmoSystem::RaycastSet)
@@ -38,8 +38,8 @@ fn update_gizmo_raycast_with_cursor(
     for mut pick_source in &mut query.iter_mut() {
         // Grab the most recent cursor event if it exists:
         if let Some(cursor_latest) = cursor.read().last() {
-            pick_source.cast_method =
-                bevy_mod_raycast::prelude::RaycastMethod::Screenspace(cursor_latest.position);
+            // pick_source.cast_method =
+            //     bevy_mod_raycast::prelude::RaycastMethod::Screenspace(cursor_latest.position);
         }
     }
 }
