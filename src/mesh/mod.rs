@@ -6,7 +6,6 @@ use bevy::{
     core_pipeline::core_3d::Camera3dDepthLoadOp, pbr::NotShadowCaster, prelude::*,
     render::view::RenderLayers,
 };
-use bevy_mod_raycast::prelude::NoBackfaceCulling;
 
 mod cone;
 mod truncated_torus;

@@ -1,5 +1,4 @@
 use bevy::{prelude::*, window::PresentMode};
-use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_transform_gizmo::TransformGizmoPlugin;
 
 fn main() {
@@ -14,7 +13,6 @@ fn main() {
                 }),
                 ..default()
             }),
-            DefaultPickingPlugins,
             TransformGizmoPlugin::new(
                 Quat::from_rotation_y(-0.2), // Align the gizmo to a different coordinate system.
                                              // Use TransformGizmoPlugin::default() to align to the

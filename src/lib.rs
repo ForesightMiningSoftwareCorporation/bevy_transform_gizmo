@@ -2,13 +2,6 @@
 
 use bevy::asset::load_internal_asset;
 use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
-use bevy_mod_picking::{
-    backend::{HitData, PointerHits},
-    picking_core::PickSet,
-    prelude::{PickingInteraction, PointerId},
-    selection::{NoDeselect, PickSelection},
-};
-use bevy_mod_raycast::prelude::RaycastSystem;
 use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};
 use normalization::*;

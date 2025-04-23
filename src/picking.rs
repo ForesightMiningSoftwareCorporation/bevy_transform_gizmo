@@ -1,10 +1,9 @@
 use bevy::prelude::*;
-use bevy_mod_raycast::prelude::RaycastSystem;
 
 use crate::{GizmoSettings, TransformGizmoSystem};
 
-pub type GizmoPickSource = bevy_mod_raycast::prelude::RaycastSource<GizmoRaycastSet>;
-pub type PickableGizmo = bevy_mod_raycast::prelude::RaycastMesh<GizmoRaycastSet>;
+pub type GizmoPickSource = RaycastSource<GizmoRaycastSet>;
+pub type PickableGizmo = RaycastMesh<GizmoRaycastSet>;
 
 /// Plugin with all the systems and resources used to raycast against gizmo handles separately from
 /// the `bevy_mod_picking` plugin.
