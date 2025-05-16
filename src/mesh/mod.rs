@@ -167,15 +167,12 @@ pub fn build_gizmo(
                 RenderLayers::layer(12),
             ));
             parent.spawn((
-                MaterialMeshBundle {
-                    mesh: cone_mesh.clone(),
-                    material: gizmo_matl_z_sel.clone(),
-                    transform: Transform::from_matrix(Mat4::from_rotation_translation(
-                        Quat::from_rotation_x(std::f32::consts::PI / 2.0),
-                        Vec3::new(0.0, 0.0, axis_length),
-                    )),
-                    ..Default::default()
-                },
+                Mesh3d(cone_mesh.clone()),
+                MeshMaterial3d(gizmo_matl_z_sel.clone()),
+                Transform::from_matrix(Mat4::from_rotation_translation(
+                    Quat::from_rotation_x(std::f32::consts::PI / 2.0),
+                    Vec3::new(0.0, 0.0, axis_length),
+                )),
                 PickableGizmo::default(),
                 TransformGizmoInteraction::TranslateAxis {
                     original: Vec3::Z,
@@ -185,31 +182,24 @@ pub fn build_gizmo(
                 RenderLayers::layer(12),
             ));
             parent.spawn((
-                MaterialMeshBundle {
-                    mesh: plane_mesh.clone(),
-                    material: gizmo_matl_z_sel.clone(),
-                    transform: Transform::from_matrix(Mat4::from_rotation_translation(
-                        Quat::from_rotation_x(std::f32::consts::PI / 2.0),
-                        Vec3::new(plane_offset, plane_offset, 0.0),
-                    )),
-                    ..Default::default()
-                },
+                Mesh3d(plane_mesh.clone()),
+                MeshMaterial3d(gizmo_matl_z_sel.clone()),
+                Transform::from_matrix(Mat4::from_rotation_translation(
+                    Quat::from_rotation_x(std::f32::consts::PI / 2.0),
+                    Vec3::new(plane_offset, plane_offset, 0.0),
+                )),
                 PickableGizmo::default(),
                 TransformGizmoInteraction::TranslatePlane {
                     original: Vec3::Z,
                     normal: Vec3::Z,
                 },
-                NoBackfaceCulling,
                 NotShadowCaster,
                 RenderLayers::layer(12),
             ));
 
             parent.spawn((
-                MaterialMeshBundle {
-                    mesh: sphere_mesh.clone(),
-                    material: gizmo_matl_v_sel.clone(),
-                    ..Default::default()
-                },
+                Mesh3d(sphere_mesh.clone()),
+                MeshMaterial3d(gizmo_matl_v_sel.clone()),
                 PickableGizmo::default(),
                 TransformGizmoInteraction::TranslatePlane {
                     original: Vec3::ZERO,
@@ -222,15 +212,9 @@ pub fn build_gizmo(
 
             // Rotation Arcs
             parent.spawn((
-                MaterialMeshBundle {
-                    mesh: rotation_mesh.clone(),
-                    material: gizmo_matl_x.clone(),
-                    transform: Transform::from_rotation(Quat::from_axis_angle(
-                        Vec3::Z,
-                        f32::to_radians(90.0),
-                    )),
-                    ..Default::default()
-                },
+                Mesh3d(rotation_mesh.clone()),
+                MeshMaterial3d(gizmo_matl_x),
+                Transform::from_rotation(Quat::from_axis_angle(Vec3::Z, f32::to_radians(90.0))),
                 RotationGizmo,
                 PickableGizmo::default(),
                 TransformGizmoInteraction::RotateAxis {
@@ -241,11 +225,8 @@ pub fn build_gizmo(
                 RenderLayers::layer(12),
             ));
             parent.spawn((
-                MaterialMeshBundle {
-                    mesh: rotation_mesh.clone(),
-                    material: gizmo_matl_y.clone(),
-                    ..Default::default()
-                },
+                Mesh3d(rotation_mesh.clone()),
+                MeshMaterial3d(gizmo_matl_y.clone()),
                 RotationGizmo,
                 PickableGizmo::default(),
                 TransformGizmoInteraction::RotateAxis {
@@ -256,15 +237,12 @@ pub fn build_gizmo(
                 RenderLayers::layer(12),
             ));
             parent.spawn((
-                MaterialMeshBundle {
-                    mesh: rotation_mesh.clone(),
-                    material: gizmo_matl_z.clone(),
-                    transform: Transform::from_rotation(
-                        Quat::from_axis_angle(Vec3::Z, f32::to_radians(90.0))
-                            * Quat::from_axis_angle(Vec3::X, f32::to_radians(90.0)),
-                    ),
-                    ..Default::default()
-                },
+                Mesh3d(rotation_mesh.clone()),
+                MeshMaterial3d(gizmo_matl_z),
+                Transform::from_rotation(
+                    Quat::from_axis_angle(Vec3::Z, f32::to_radians(90.0))
+                        * Quat::from_axis_angle(Vec3::X, f32::to_radians(90.0)),
+                ),
                 RotationGizmo,
                 PickableGizmo::default(),
                 TransformGizmoInteraction::RotateAxis {
@@ -277,16 +255,13 @@ pub fn build_gizmo(
         });
 
     commands.spawn((
-        Camera3dBundle {
-            camera_3d: Camera3d {
-                depth_load_op: Camera3dDepthLoadOp::Clear(0.),
-                ..default()
-            },
-            camera: Camera {
-                clear_color: ClearColorConfig::None,
-                ..default()
-            },
-            ..Default::default()
+        Camera3d {
+            depth_load_op: Camera3dDepthLoadOp::Clear(0.),
+            ..default()
+        },
+        Camera {
+            clear_color: ClearColorConfig::None,
+            ..default()
         },
         InternalGizmoCamera,
         RenderLayers::layer(12),

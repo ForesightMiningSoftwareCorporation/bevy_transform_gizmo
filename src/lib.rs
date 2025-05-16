@@ -1,6 +1,10 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::asset::load_internal_asset;
+use bevy::picking::backend::{HitData, PointerHits};
+use bevy::picking::focus::PickingInteraction;
+use bevy::picking::pointer::PointerId;
+use bevy::picking::PickSet;
 use bevy::{prelude::*, render::camera::Projection, transform::TransformSystem};
 use gizmo_material::GizmoMaterial;
 use mesh::{RotationGizmo, ViewTranslateGizmo};

@@ -53,7 +53,7 @@ pub fn normalize(
     for (mut transform, mut global_transform, normalize) in query.p1().iter_mut() {
         let distance = view.transform_point3(global_transform.translation()).z;
         let gt = global_transform.compute_transform();
-        let pixel_end = if let Some(coords) = Camera::world_to_viewport(
+        let pixel_end = if let Ok(coords) = Camera::world_to_viewport(
             &camera,
             &GlobalTransform::default(),
             Vec3::new(normalize.size_in_world * gt.scale.x, 0.0, distance),
@@ -62,7 +62,7 @@ pub fn normalize(
         } else {
             continue;
         };
-        let pixel_root = if let Some(coords) = Camera::world_to_viewport(
+        let pixel_root = if let Ok(coords) = Camera::world_to_viewport(
             &camera,
             &GlobalTransform::default(),
             Vec3::new(0.0, 0.0, distance),
